@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Inside the Acceptable Use Policy</title>
+<style>
+  :root {
+    --bg:        #fafaf7;
+    --panel:     #ffffff;
+    --ink:       #1a1a1a;
+    --ink-soft:  #4a4a4a;
+    --ink-faint: #8a8a8a;
+    --rule:      #e6e3dc;
+    --rule-soft: #efece5;
+    --col-a:       #1565a8;
+    --col-a-soft:  #d6e6f4;
+    --col-b:       #c0392b;
+    --col-b-soft:  #f6dad4;
+    --col-bridge:  #d4a017;
+    --col-bridge-soft:#faecc4;
+    --col-solo:    #1565a8;
+    --col-solo-soft: #d6e6f4;
+    --edge:        #c7c2b6;
+    --edge-a:      #4d8bc1;
+    --edge-b:      #d36b5d;
+    --edge-bridge: #b8851a;
+    --edge-solo:   #4d8bc1;
+    --serif:     "Iowan Old Style","Charter","Georgia","Cambria",ui-serif,serif;
+    --sans:      "Inter","Helvetica Neue",-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+    --mono:      "SF Mono","Menlo","Monaco",ui-monospace,monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 9px 18px 8px; border-bottom: 1px solid var(--rule); background: var(--panel); gap: 18px; min-height: 34px; flex-wrap: wrap; }
+  .topbar .eyebrow { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .14em; color: var(--ink-faint); white-space: nowrap; }
+  .topbar .eyebrow .accent { color: var(--col-solo); font-weight: 600; }
+  .topbar .eyebrow .accent.a { color: var(--col-a); }
+  .topbar .eyebrow .accent.b { color: var(--col-b); }
+  .topbar .topstats { display: flex; flex-wrap: wrap; gap: 14px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); letter-spacing: .02em; }
+  .topbar .topstats .stat b { color: var(--ink); font-weight: 600; margin-right: 4px; }
+  .topbar .topstats .stat.solo b { color: var(--col-solo); }
+  .topbar .topstats .stat.a b { color: var(--col-a); }
+  .topbar .topstats .stat.b b { color: var(--col-b); }
+  .topbar .topstats .stat.bridge b { color: var(--col-bridge); }
+  .topbar .topstats .sep { color: var(--ink-faint); opacity: .6; }
+  main { flex: 1; display: grid; grid-template-columns: 1fr 0px; min-height: 0; transition: grid-template-columns .28s cubic-bezier(.2,.7,.2,1); }
+  main.has-focus { grid-template-columns: 1fr 360px; }
+  #stage { position: relative; background: radial-gradient(ellipse 70% 80% at 50% 50%, #d6e6f4 0%, transparent 70%), var(--bg); overflow: hidden; }
+  #graph { width: 100%; height: 100%; display: block; }
+  .legend { position: absolute; left: 24px; bottom: 22px; background: rgba(255,255,255,.92); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; font-size: 11px; color: var(--ink-soft); line-height: 1.5; pointer-events: none; backdrop-filter: blur(6px); max-width: 290px; }
+  .legend .row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .legend .row:last-child { margin-bottom: 0; }
+  .legend .swatch { width: 10px; height: 10px; border-radius: 50%; }
+  .legend .swatch.solo { background: var(--col-solo); }
+  .controls { position: absolute; right: 18px; top: 44px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .search { background: rgba(255,255,255,.97); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 10px; font-family: var(--sans); font-size: 12px; width: 220px; color: var(--ink); outline: none; }
+  .search:focus { border-color: var(--col-bridge); }
+  .reset { background: var(--ink); color: #fff; border: 0; border-radius: 4px; padding: 5px 11px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; opacity: 0; transition: opacity .2s; }
+  .reset.show { opacity: 1; }
+  .toggle { background: rgba(255,255,255,.97); border: 1px solid var(--rule); color: var(--ink-soft); border-radius: 4px; padding: 5px 11px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; }
+  .toggle.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .chips-wrap { position: absolute; right: 18px; top: 152px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; max-width: 290px; }
+  .chips-wrap .chips-label { font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+  .chip { background: rgba(255,255,255,.97); border: 1px solid var(--rule); border-radius: 12px; padding: 3px 9px; font-family: var(--serif); font-style: italic; font-size: 11.5px; color: var(--ink-soft); cursor: pointer; line-height: 1.2; transition: background .12s, color .12s, border-color .12s; white-space: nowrap; }
+  .chip .ct { font-family: var(--mono); font-style: normal; font-size: 9.5px; color: var(--ink-faint); margin-left: 5px; }
+  .chip:hover { border-color: var(--col-bridge); color: var(--ink); }
+  .chip.on { background: var(--col-bridge); border-color: var(--col-bridge); color: #fff; }
+  .chip.on .ct { color: rgba(255,255,255,.85); }
+  aside { border-left: 1px solid var(--rule); background: var(--panel); padding: 26px 28px 36px; overflow-y: auto; overflow-x: hidden; min-height: 0; opacity: 0; transition: opacity .2s ease .04s; }
+  main.has-focus aside { opacity: 1; }
+  main:not(.has-focus) aside { padding: 0; border-left: 0; }
+  .ptitle { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); margin-bottom: 8px; }
+  aside h2 { font-family: var(--serif); font-size: 22px; font-weight: 500; margin: 0 0 8px; line-height: 1.25; letter-spacing: -.005em; }
+  .sidechip { display: inline-block; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; padding: 3px 8px; border-radius: 3px; margin-right: 6px; color: #fff; }
+  .sidechip.solo { background: var(--col-solo); }
+  .meta { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-bottom: 18px; }
+  .section { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--rule-soft); }
+  .section h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); margin: 0 0 10px; font-weight: 600; }
+  .preds-box { display: flex; flex-direction: column; gap: 4px; }
+  .predrow { font-family: var(--serif); font-size: 13px; color: var(--ink-soft); padding: 4px 0; line-height: 1.4; }
+  .predrow b { color: var(--ink); font-weight: 600; }
+  .predrow .pred { color: var(--col-bridge); font-style: italic; font-family: var(--serif); }
+  .tooltip { position: absolute; pointer-events: none; background: var(--ink); color: #fff; padding: 11px 13px; border-radius: 6px; font-size: 12px; line-height: 1.45; max-width: 380px; box-shadow: 0 6px 20px rgba(0,0,0,.18); opacity: 0; transition: opacity .12s; z-index: 50; }
+  .tooltip.show { opacity: 1; }
+  .tooltip .tt-pred { font-family: var(--serif); font-size: 13px; font-style: italic; color: #ffb98a; margin-bottom: 6px; }
+  .tooltip .tt-meta { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: #ffb98a; margin-bottom: 6px; }
+  .tooltip .tt-pair { font-family: var(--serif); font-size: 13px; margin-bottom: 8px; }
+  .tooltip .tt-pair em { color: #ffb98a; font-style: normal; font-weight: 500; }
+  .edge { fill: none; stroke: var(--edge); stroke-opacity: .5; transition: stroke .15s, stroke-opacity .15s, stroke-width .15s; }
+  .edge.solo { stroke: var(--edge-solo); stroke-opacity: .55; }
+  .edge.dim { stroke-opacity: .07; }
+  .edge.focus { stroke-opacity: 1; stroke-width: 2.5px; }
+  .arrowhead { fill: var(--edge); }
+  .arrowhead.solo { fill: var(--edge-solo); }
+  .node circle { stroke: #fff; stroke-width: 1.5px; cursor: pointer; transition: opacity .15s, stroke .15s, stroke-width .15s; }
+  .node.solo circle { fill: var(--col-solo); }
+  .node.dim circle { opacity: .12; }
+  .node.focus circle { stroke: #fff; stroke-width: 3px; }
+  .node text { font-family: var(--serif); font-size: 11.5px; fill: var(--ink); pointer-events: none; user-select: none; text-anchor: middle; dominant-baseline: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; opacity: 0; transition: opacity .12s; }
+  .node text.show { opacity: 1; }
+  .node.dim text { opacity: .12 !important; }
+  .node.focus text { opacity: 1 !important; font-weight: 600; }
+  .node:hover text { opacity: 1; }
+  .edge-label { font-family: var(--serif); font-size: 10.5px; font-style: italic; fill: var(--ink-faint); text-anchor: middle; pointer-events: none; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; opacity: 0; transition: opacity .15s; }
+  .edge-label.show { opacity: 1; fill: var(--col-bridge); }
+  .edge-label.alwaysShow { opacity: 1; }
+  @media (max-width: 1100px) {
+    main, main.has-focus { grid-template-columns: 1fr; grid-template-rows: 1fr 0px; }
+    main.has-focus { grid-template-rows: 1fr 360px; }
+    aside { border-left: 0; }
+    main.has-focus aside { border-top: 1px solid var(--rule); max-height: 380px; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="eyebrow">Inside the <span class="accent">Acceptable Use Policy</span> &middot; single-policy view</span>
+  <span class="topstats"><span class="stat solo"><b>77</b>concepts</span><span class="sep">&middot;</span><span class="stat solo"><b>124</b>relationships</span><span class="sep">&middot;</span><span class="stat solo"><b>43</b>distinct verbs</span><span class="sep">&middot;</span><span class="stat solo">top hub <b>Employee</b> (22)</span></span>
+</header>
+<main>
+  <section id="stage">
+    <svg id="graph">
+      <defs>
+        <marker id="arrow" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,-5L10,0L0,5" class="arrowhead"/></marker>
+        <marker id="arrow-solo" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,-5L10,0L0,5" class="arrowhead solo"/></marker>
+      </defs>
+    </svg>
+    <div class="controls">
+      <input class="search" id="search" placeholder="Find a concept..." />
+      <button class="toggle" id="toggle-preds">Show predicates</button>
+      <button class="reset" id="reset">Reset view</button>
+    </div>
+    <div class="chips-wrap" id="chips-wrap">
+      <div class="chips-label">Filter by predicate</div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="legend"><div class="row"><span class="swatch solo"></span> Concept inside the Acceptable Use Policy</div><div class="row" style="margin-top:6px">Drag nodes. Click a concept to see how it relates. Hover any arrow for the predicate.</div></div>
+    <div class="tooltip" id="tip"></div>
+  </section>
+  <aside id="panel"></aside>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+  const DATA = {"title":"Acceptable Use Policy","label":"Acceptable Use Policy","color_role":"A","totals":{"qids":92,"nodes":77,"edges":124,"distinct_predicates":43},"nodes":[{"id":"Mobile Device","side":"SOLO","topics_total":6,"degree":16},{"id":"Employee","side":"SOLO","topics_total":22,"degree":16},{"id":"Information Security Policies","side":"SOLO","topics_total":5,"degree":14},{"id":"Customer Data","side":"SOLO","topics_total":7,"degree":13},{"id":"Information Security Management System","side":"SOLO","topics_total":2,"degree":13},{"id":"Acceptable Use","side":"SOLO","topics_total":12,"degree":12},{"id":"Incident Response Plan","side":"SOLO","topics_total":3,"degree":6},{"id":"Confidentiality Agreement","side":"SOLO","topics_total":2,"degree":5},{"id":"Remote Access","side":"SOLO","topics_total":3,"degree":5},{"id":"Risk Management Standard","side":"SOLO","topics_total":2,"degree":5},{"id":"Data Classification Standard","side":"SOLO","topics_total":2,"degree":5},{"id":"Asset Management Policy","side":"SOLO","topics_total":3,"degree":5},{"id":"Vulnerability Management Policy","side":"SOLO","topics_total":4,"degree":5},{"id":"Encryption Key Management Policy","side":"SOLO","topics_total":2,"degree":5},{"id":"Authentication Policy","side":"SOLO","topics_total":2,"degree":5},{"id":"Data Classification Policy","side":"SOLO","topics_total":4,"degree":4},{"id":"Production Environment","side":"SOLO","topics_total":3,"degree":4},{"id":"Security Policy","side":"SOLO","topics_total":2,"degree":4},{"id":"Information","side":"SOLO","topics_total":4,"degree":4},{"id":"Secure Production Environment","side":"SOLO","topics_total":4,"degree":4},{"id":"Acknowledgment Form","side":"SOLO","topics_total":2,"degree":4},{"id":"Data Classification","side":"SOLO","topics_total":5,"degree":4},{"id":"Physical Security Policy","side":"SOLO","topics_total":2,"degree":3},{"id":"NDA","side":"SOLO","topics_total":3,"degree":3},{"id":"Mobile Device Policy","side":"SOLO","topics_total":4,"degree":3},{"id":"User","side":"SOLO","topics_total":4,"degree":3},{"id":"Contractors","side":"SOLO","topics_total":5,"degree":3},{"id":"Business Code of Conduct","side":"SOLO","topics_total":3,"degree":3},{"id":"Personal Device","side":"SOLO","topics_total":3,"degree":3},{"id":"Company Data","side":"SOLO","topics_total":2,"degree":3},{"id":"Code of Conduct Policy","side":"SOLO","topics_total":3,"degree":3},{"id":"New Hires","side":"SOLO","topics_total":5,"degree":2},{"id":"Incident Response","side":"SOLO","topics_total":2,"degree":2},{"id":"Contract","side":"SOLO","topics_total":3,"degree":2},{"id":"Privacy","side":"SOLO","topics_total":3,"degree":2},{"id":"Authentication","side":"SOLO","topics_total":2,"degree":2},{"id":"System","side":"SOLO","topics_total":3,"degree":2},{"id":"Risk Management","side":"SOLO","topics_total":2,"degree":2},{"id":"Internet","side":"SOLO","topics_total":3,"degree":2},{"id":"Customer","side":"SOLO","topics_total":3,"degree":2},{"id":"Thumb Drive","side":"SOLO","topics_total":2,"degree":2},{"id":"Encryption Key Management","side":"SOLO","topics_total":2,"degree":2},{"id":"Staff","side":"SOLO","topics_total":5,"degree":2},{"id":"Control","side":"SOLO","topics_total":2,"degree":2},{"id":"Hire","side":"SOLO","topics_total":2,"degree":2},{"id":"Data","side":"SOLO","topics_total":4,"degree":2},{"id":"Organization","side":"SOLO","topics_total":4,"degree":2},{"id":"Password Policy","side":"SOLO","topics_total":2,"degree":2},{"id":"Onboarding","side":"SOLO","topics_total":3,"degree":1},{"id":"Information Classification","side":"SOLO","topics_total":2,"degree":1},{"id":"Texting","side":"SOLO","topics_total":2,"degree":1},{"id":"Email","side":"SOLO","topics_total":5,"degree":1},{"id":"IT Team","side":"SOLO","topics_total":2,"degree":1},{"id":"Employment","side":"SOLO","topics_total":2,"degree":1},{"id":"Applicable Laws","side":"SOLO","topics_total":2,"degree":1},{"id":"Environment","side":"SOLO","topics_total":2,"degree":1},{"id":"Encryption","side":"SOLO","topics_total":3,"degree":1},{"id":"Social Media","side":"SOLO","topics_total":2,"degree":1},{"id":"Regulations","side":"SOLO","topics_total":2,"degree":1},{"id":"Remote Work","side":"SOLO","topics_total":3,"degree":1},{"id":"Firewall","side":"SOLO","topics_total":2,"degree":1},{"id":"Removable Media","side":"SOLO","topics_total":9,"degree":1},{"id":"Laptop","side":"SOLO","topics_total":2,"degree":1},{"id":"Third Party","side":"SOLO","topics_total":4,"degree":1},{"id":"Social Networking","side":"SOLO","topics_total":2,"degree":1},{"id":"Thumb Drives","side":"SOLO","topics_total":2,"degree":1},{"id":"Mobile Devices","side":"SOLO","topics_total":3,"degree":1},{"id":"Computers","side":"SOLO","topics_total":2,"degree":1},{"id":"Company Employee","side":"SOLO","topics_total":2,"degree":1},{"id":"Emailing","side":"SOLO","topics_total":2,"degree":1},{"id":"Company Device","side":"SOLO","topics_total":2,"degree":1},{"id":"Assets","side":"SOLO","topics_total":2,"degree":1},{"id":"Conduct","side":"SOLO","topics_total":2,"degree":1},{"id":"BYOD","side":"SOLO","topics_total":2,"degree":1},{"id":"Customer Information","side":"SOLO","topics_total":2,"degree":1},{"id":"Location","side":"SOLO","topics_total":2,"degree":1},{"id":"Employee Ability to Safely Operate Vehicle","side":"SOLO","topics_total":2,"degree":1}],"edges":[{"f":"Contractors","p":"RESPONSIBLE_FOR","t":"Information","weight":1,"side":"SOLO"},{"f":"Data Classification","p":"GOVERNS","t":"Data Classification Policy","weight":1,"side":"SOLO"},{"f":"Staff","p":"ACCEPTS_AS_PART_OF","t":"Contract","weight":1,"side":"SOLO"},{"f":"Contract","p":"REQUIRED_BEFORE","t":"Employment","weight":1,"side":"SOLO"},{"f":"Organization","p":"DEFINES","t":"Asset Management Policy","weight":1,"side":"SOLO"},{"f":"Organization","p":"ENFORCES","t":"Asset Management Policy","weight":1,"side":"SOLO"},{"f":"Asset Management Policy","p":"INCLUDES","t":"Control","weight":1,"side":"SOLO"},{"f":"Employee","p":"MUST_AGREE_TO","t":"Business Code of Conduct","weight":2,"side":"SOLO"},{"f":"Business Code of Conduct","p":"COVERS","t":"Acceptable Use","weight":2,"side":"SOLO"},{"f":"Employee","p":"IS_GRANTED_ACCESS_TO","t":"Information","weight":1,"side":"SOLO"},{"f":"Employee","p":"SIGNS","t":"Code of Conduct Policy","weight":1,"side":"SOLO"},{"f":"Code of Conduct Policy","p":"IS_PART_OF","t":"Onboarding","weight":1,"side":"SOLO"},{"f":"Code of Conduct Policy","p":"GOVERNS","t":"Conduct","weight":2,"side":"SOLO"},{"f":"Employee","p":"ACKNOWLEDGES","t":"Acknowledgment Form","weight":1,"side":"SOLO"},{"f":"Contractors","p":"ACKNOWLEDGES","t":"Acknowledgment Form","weight":1,"side":"SOLO"},{"f":"Acknowledgment Form","p":"ACKNOWLEDGES","t":"Information Security Policies","weight":1,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Remote Access","weight":1,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Email","weight":1,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Internet","weight":1,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Removable Media","weight":4,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Social Media","weight":1,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Social Networking","weight":1,"side":"SOLO"},{"f":"Privacy","p":"APPLIES_TO","t":"Customer Information","weight":1,"side":"SOLO"},{"f":"Control","p":"ENSURES","t":"Acceptable Use","weight":1,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Information","weight":1,"side":"SOLO"},{"f":"Employee","p":"ACKNOWLEDGES","t":"NDA","weight":1,"side":"SOLO"},{"f":"Business Code of Conduct","p":"CONTAINS_SECTIONS_ON","t":"Acceptable Use","weight":1,"side":"SOLO"},{"f":"Employee","p":"PERFORMS_ACTION_UPON","t":"Hire","weight":1,"side":"SOLO"},{"f":"Contractors","p":"PERFORMS_ACTION_UPON","t":"Hire","weight":1,"side":"SOLO"},{"f":"Employee","p":"SIGNS","t":"Acknowledgment Form","weight":1,"side":"SOLO"},{"f":"New Hires","p":"ACKNOWLEDGES","t":"NDA","weight":1,"side":"SOLO"},{"f":"NDA","p":"ACKNOWLEDGES_COMPLIANCE_WITH","t":"Information Security Policies","weight":1,"side":"SOLO"},{"f":"New Hires","p":"ACKNOWLEDGES","t":"Confidentiality Agreement","weight":1,"side":"SOLO"},{"f":"Staff","p":"ACKNOWLEDGES","t":"Confidentiality Agreement","weight":1,"side":"SOLO"},{"f":"User","p":"ACKNOWLEDGES","t":"Confidentiality Agreement","weight":1,"side":"SOLO"},{"f":"Confidentiality Agreement","p":"REQUIRED_BEFORE_ACCESSING","t":"System","weight":1,"side":"SOLO"},{"f":"Confidentiality Agreement","p":"REQUIRED_BEFORE_ACCESSING","t":"Data","weight":1,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Assets","weight":2,"side":"SOLO"},{"f":"Data Classification Policy","p":"COMPLIES_WITH","t":"Data Classification","weight":1,"side":"SOLO"},{"f":"User","p":"RESPONSIBLE_FOR","t":"Computers","weight":1,"side":"SOLO"},{"f":"Remote Access","p":"APPLIES_TO","t":"Data","weight":1,"side":"SOLO"},{"f":"Employee","p":"USES","t":"Remote Access","weight":1,"side":"SOLO"},{"f":"Laptop","p":"CONNECTS_TO","t":"Internet","weight":1,"side":"SOLO"},{"f":"IT Team","p":"MONITORS","t":"Firewall","weight":1,"side":"SOLO"},{"f":"Remote Access","p":"APPLIES_TO","t":"Information","weight":1,"side":"SOLO"},{"f":"Remote Access","p":"APPLIES_TO","t":"System","weight":1,"side":"SOLO"},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Remote Work","weight":3,"side":"SOLO"},{"f":"Customer","p":"IS_RESPONSIBLE_FOR","t":"Customer Data","weight":1,"side":"SOLO"},{"f":"Customer","p":"GRANTS_ACCESS_TO","t":"Customer Data","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"OUTSIDE","t":"Secure Production Environment","weight":1,"side":"SOLO"},{"f":"Authentication Policy","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"SOLO"},{"f":"Authentication Policy","p":"GOVERNS","t":"Authentication","weight":1,"side":"SOLO"},{"f":"Data Classification Standard","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"SOLO"},{"f":"Data Classification Standard","p":"GOVERNS","t":"Data Classification","weight":1,"side":"SOLO"},{"f":"Encryption Key Management Policy","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"SOLO"},{"f":"Encryption Key Management Policy","p":"GOVERNS","t":"Encryption Key Management","weight":1,"side":"SOLO"},{"f":"Vulnerability Management Policy","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"SOLO"},{"f":"Incident Response Plan","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"SOLO"},{"f":"Incident Response Plan","p":"GOVERNS","t":"Incident Response","weight":1,"side":"SOLO"},{"f":"Risk Management Standard","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"SOLO"},{"f":"Risk Management Standard","p":"GOVERNS","t":"Risk Management","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"INCLUDES","t":"Asset Management Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"INCLUDES","t":"Data Classification Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"INCLUDES","t":"Incident Response Plan","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"INCLUDES","t":"Mobile Device Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"INCLUDES","t":"Password Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"INCLUDES","t":"Physical Security Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"INCLUDES","t":"Vulnerability Management Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"COVERS","t":"Data Classification Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"COVERS","t":"Vulnerability Management Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"COVERS","t":"Asset Management Policy","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"SOLO"},{"f":"Information Security Policies","p":"COMMUNICATED_TO","t":"Third Party","weight":1,"side":"SOLO"},{"f":"Security Policy","p":"COVERS","t":"Information Classification","weight":1,"side":"SOLO"},{"f":"Security Policy","p":"COVERS","t":"Privacy","weight":1,"side":"SOLO"},{"f":"Security Policy","p":"COVERS","t":"Encryption","weight":1,"side":"SOLO"},{"f":"Information Security Management System","p":"INCLUDES","t":"Authentication Policy","weight":1,"side":"SOLO"},{"f":"Information Security Management System","p":"INCLUDES","t":"Data Classification Standard","weight":1,"side":"SOLO"},{"f":"Information Security Management System","p":"INCLUDES","t":"Encryption Key Management Policy","weight":1,"side":"SOLO"},{"f":"Information Security Management System","p":"INCLUDES","t":"Incident Response Plan","weight":1,"side":"SOLO"},{"f":"Information Security Management System","p":"INCLUDES","t":"Physical Security Policy","weight":1,"side":"SOLO"},{"f":"Information Security Management System","p":"INCLUDES","t":"Risk Management Standard","weight":1,"side":"SOLO"},{"f":"Information Security Management System","p":"INCLUDES","t":"Vulnerability Management Policy","weight":1,"side":"SOLO"},{"f":"Authentication Policy","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"SOLO"},{"f":"Data Classification Standard","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"SOLO"},{"f":"Encryption Key Management Policy","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"SOLO"},{"f":"Incident Response Plan","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"SOLO"},{"f":"Physical Security Policy","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"SOLO"},{"f":"Risk Management Standard","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"SOLO"},{"f":"Vulnerability Management Policy","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"SOLO"},{"f":"Authentication","p":"GOVERNS","t":"Authentication Policy","weight":1,"side":"SOLO"},{"f":"Data Classification","p":"GOVERNS","t":"Data Classification Standard","weight":1,"side":"SOLO"},{"f":"Encryption Key Management","p":"GOVERNS","t":"Encryption Key Management Policy","weight":1,"side":"SOLO"},{"f":"Incident Response","p":"GOVERNS","t":"Incident Response Plan","weight":1,"side":"SOLO"},{"f":"Risk Management","p":"GOVERNS","t":"Risk Management Standard","weight":1,"side":"SOLO"},{"f":"Mobile Device","p":"PERMITTED_TO_STORE","t":"Company Data","weight":1,"side":"SOLO"},{"f":"Mobile Device","p":"PERMITTED_TO_TRANSMIT","t":"Company Data","weight":1,"side":"SOLO"},{"f":"Mobile Device","p":"PERMITTED_TO_PROCESS","t":"Company Data","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"STRICTLY_PROHIBITED_ON","t":"Mobile Device","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"STRICTLY_PROHIBITED_ON","t":"Thumb Drive","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"OUTSIDE_OF","t":"Secure Production Environment","weight":1,"side":"SOLO"},{"f":"Secure Production Environment","p":"SCOPED_AS","t":"Production Environment","weight":2,"side":"SOLO"},{"f":"Customer Data","p":"STORED_IN","t":"Production Environment","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"ANALYZED_IN","t":"Production Environment","weight":1,"side":"SOLO"},{"f":"Company Employee","p":"USES","t":"Mobile Device","weight":2,"side":"SOLO"},{"f":"Company Device","p":"IS_A","t":"Mobile Device","weight":2,"side":"SOLO"},{"f":"Personal Device","p":"IS_A","t":"Mobile Device","weight":2,"side":"SOLO"},{"f":"Mobile Device","p":"SUBJECT_TO","t":"Applicable Laws","weight":2,"side":"SOLO"},{"f":"Mobile Device","p":"SUBJECT_TO","t":"Regulations","weight":2,"side":"SOLO"},{"f":"Mobile Device","p":"USED_IN","t":"Location","weight":2,"side":"SOLO"},{"f":"Mobile Device","p":"SHOULD_NOT_BE_USED_IN_MANNER_THAT_AFFECTS","t":"Employee Ability to Safely Operate Vehicle","weight":2,"side":"SOLO"},{"f":"Mobile Device","p":"SHOULD_NOT_BE_USED_FOR","t":"Texting","weight":2,"side":"SOLO"},{"f":"Mobile Device","p":"SHOULD_NOT_BE_USED_FOR","t":"Emailing","weight":2,"side":"SOLO"},{"f":"User","p":"WISHING_TO_USE","t":"Mobile Device","weight":1,"side":"SOLO"},{"f":"Mobile Device Policy","p":"GOVERNS","t":"Mobile Device","weight":2,"side":"SOLO"},{"f":"Mobile Device Policy","p":"COVERS","t":"Personal Device","weight":1,"side":"SOLO"},{"f":"BYOD","p":"APPLIES_TO","t":"Personal Device","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"PROHIBITED_ON","t":"Mobile Device","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"PROHIBITED_ON","t":"Thumb Drive","weight":1,"side":"SOLO"},{"f":"Production Environment","p":"SCOPED_AS","t":"Environment","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"PROHIBITED_ON","t":"Mobile Devices","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"PROHIBITED_ON","t":"Thumb Drives","weight":1,"side":"SOLO"},{"f":"Customer Data","p":"NOT_STORED_OUTSIDE","t":"Secure Production Environment","weight":1,"side":"SOLO"},{"f":"Security Policy","p":"INCLUDES","t":"Password Policy","weight":1,"side":"SOLO"}]};
+  const MODE = "solo";
+  const POL_A = DATA.doc_a || DATA.label || "";
+  const POL_B = DATA.doc_b || "";
+  const SOLO_LABEL = DATA.label || POL_A;
+  function prettyPred(p) { if (!p) return ""; return String(p).toLowerCase().replace(/_/g, " "); }
+  const svg = d3.select("#graph");
+  const stage = document.getElementById("stage");
+  const tip = document.getElementById("tip");
+  const panel = document.getElementById("panel");
+  const mainEl = document.querySelector("main");
+  const search = document.getElementById("search");
+  const resetBtn = document.getElementById("reset");
+  const toggleBtn = document.getElementById("toggle-preds");
+  let W = stage.clientWidth, H = stage.clientHeight;
+  svg.attr("viewBox", [0, 0, W, H]);
+  const zoomG = svg.append("g");
+  const gEdges = zoomG.append("g").attr("class", "edges");
+  const gLabels = zoomG.append("g").attr("class", "edge-labels");
+  const gNodes = zoomG.append("g").attr("class", "nodes");
+  const sizeOf = (d) => (d.topics_a || 0) + (d.topics_b || 0) + (MODE === "solo" ? (d.topics_total || 0) : 0);
+  const maxTopics = d3.max(DATA.nodes, sizeOf) || 1;
+  const r = d3.scaleSqrt().domain([1, maxTopics]).range([4, MODE === "solo" ? 34 : 26]);
+  const ew = d3.scaleSqrt().domain([1, d3.max(DATA.edges, d => d.weight) || 1]).range([0.7, 3.4]);
+  const nodeById = new Map(DATA.nodes.map(n => [n.id, n]));
+  const inEdges = new Map(DATA.nodes.map(n => [n.id, []]));
+  const outEdges = new Map(DATA.nodes.map(n => [n.id, []]));
+  DATA.edges.forEach(e => { if (!nodeById.has(e.f) || !nodeById.has(e.t)) return; outEdges.get(e.f).push(e); inEdges.get(e.t).push(e); });
+  DATA.nodes.forEach(n => { n.uiSide = "solo"; });
+  DATA.edges.forEach(e => { e.uiSide = "solo"; });
+  const leanOf = (d) => 0;
+  const sideX = (d) => W * 0.5;
+  const links = DATA.edges.map(e => ({ source: e.f, target: e.t, w: e.weight, edge: e }));
+  const isConn = false;
+  const sim = d3.forceSimulation(DATA.nodes).force("link", d3.forceLink(links).id(d => d.id).distance(d => 72 + 55 / Math.sqrt(d.w)).strength(d => Math.min(1, 0.04 + 0.05 * d.w))).force("charge", d3.forceManyBody().strength(-220)).force("collide", d3.forceCollide().radius(d => r(sizeOf(d)) + 11)).force("x", d3.forceX(W * 0.5).strength(0.06)).force("y", d3.forceY(H / 2).strength(0.05));
+  const edgeSel = gEdges.selectAll("path").data(links).join("path").attr("class", d => "edge " + d.edge.uiSide).attr("stroke-width", d => ew(d.w)).attr("marker-end", d => `url(#arrow-${d.edge.uiSide})`).on("mouseenter", (ev, d) => showTip(ev, d)).on("mousemove", (ev) => moveTip(ev)).on("mouseleave", hideTip);
+  const labelSel = gLabels.selectAll("text").data(links).join("text").attr("class", "edge-label").text(d => prettyPred(d.edge.p));
+  const nodeSel = gNodes.selectAll("g.node").data(DATA.nodes, d => d.id).join("g").attr("class", d => "node " + d.uiSide).call(d3.drag().on("start", (ev, d) => { if (!ev.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }).on("drag", (ev, d) => { d.fx = ev.x; d.fy = ev.y; }).on("end", (ev, d) => { if (!ev.active) sim.alphaTarget(0); })).on("click", (ev, d) => { ev.stopPropagation(); focusNode(d); });
+  nodeSel.append("circle").attr("r", d => r(sizeOf(d)));
+  const sortedSize = DATA.nodes.slice().sort((a, b) => sizeOf(b) - sizeOf(a));
+  const labelAlways = new Set(sortedSize.slice(0, 30).map(n => n.id));
+  nodeSel.append("text").attr("dy", d => -(r(sizeOf(d)) + 7)).text(d => d.id).classed("show", d => labelAlways.has(d.id));
+  sim.on("tick", () => {
+    edgeSel.attr("d", d => { const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y; const dr = Math.hypot(dx, dy) * 1.7; const tr = r(sizeOf(d.target)) + 4; const ang = Math.atan2(dy, dx); const tx = d.target.x - Math.cos(ang) * tr; const ty = d.target.y - Math.sin(ang) * tr; return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${tx},${ty}`; });
+    labelSel.attr("x", d => (d.source.x + d.target.x) / 2).attr("y", d => (d.source.y + d.target.y) / 2 - 4);
+    nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+  svg.call(d3.zoom().scaleExtent([0.4, 4]).on("zoom", ev => zoomG.attr("transform", ev.transform)));
+  svg.on("click", () => clearFocus());
+  let focused = null;
+  function focusNode(d) {
+    focused = d.id;
+    const ins = inEdges.get(d.id) || [];
+    const outs = outEdges.get(d.id) || [];
+    const nbr = new Set();
+    ins.forEach(e => nbr.add(e.f));
+    outs.forEach(e => nbr.add(e.t));
+    nbr.add(d.id);
+    nodeSel.classed("dim", n => !nbr.has(n.id)).classed("focus", n => n.id === d.id);
+    edgeSel.classed("dim", e => e.source.id !== d.id && e.target.id !== d.id).classed("focus", e => e.source.id === d.id || e.target.id === d.id);
+    labelSel.classed("show", e => e.source.id === d.id || e.target.id === d.id);
+    renderPanel(d);
+    resetBtn.classList.add("show");
+    if (!mainEl.classList.contains("has-focus")) { mainEl.classList.add("has-focus"); setTimeout(() => { W = stage.clientWidth; H = stage.clientHeight; svg.attr("viewBox", [0, 0, W, H]); sim.alpha(0.25).restart(); }, 320); }
+  }
+  function clearFocus() {
+    focused = null;
+    nodeSel.classed("dim", false).classed("focus", false);
+    edgeSel.classed("dim", false).classed("focus", false);
+    labelSel.classed("show", false);
+    document.querySelectorAll(".chip.on").forEach(c => c.classList.remove("on"));
+    renderEmpty();
+    resetBtn.classList.remove("show");
+    search.value = "";
+    if (mainEl.classList.contains("has-focus")) { mainEl.classList.remove("has-focus"); setTimeout(() => { W = stage.clientWidth; H = stage.clientHeight; svg.attr("viewBox", [0, 0, W, H]); sim.alpha(0.25).restart(); }, 320); }
+  }
+  resetBtn.addEventListener("click", clearFocus);
+  let allOn = false;
+  toggleBtn.addEventListener("click", () => { allOn = !allOn; toggleBtn.classList.toggle("on", allOn); toggleBtn.textContent = allOn ? "Hide predicates" : "Show predicates"; labelSel.classed("alwaysShow", allOn); });
+  const backboneAlwaysOn = false;
+  const predCounts = new Map();
+  DATA.edges.forEach(e => { const p = prettyPred(e.p); if (!p) return; predCounts.set(p, (predCounts.get(p) || 0) + 1); });
+  const topPreds = Array.from(predCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  const chipsEl = document.getElementById("chips");
+  const chipsWrap = document.getElementById("chips-wrap");
+  if (!topPreds.length) { chipsWrap.style.display = "none"; } else {
+    let activePred = null;
+    topPreds.forEach(([pred, n]) => {
+      const chip = document.createElement("button");
+      chip.className = "chip";
+      chip.innerHTML = `${escapeHtml(pred)}<span class="ct">${n}</span>`;
+      chip.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (activePred === pred) { activePred = null; document.querySelectorAll(".chip.on").forEach(c => c.classList.remove("on")); edgeSel.classed("dim", false); labelSel.classed("show", false).classed("alwaysShow", allOn); nodeSel.classed("dim", false); }
+        else { activePred = pred; document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c === chip)); const liveNodes = new Set(); edgeSel.classed("dim", e => prettyPred(e.edge.p) !== pred); labelSel.classed("show", e => prettyPred(e.edge.p) === pred).classed("alwaysShow", false); DATA.edges.forEach(e => { if (prettyPred(e.p) === pred) { liveNodes.add(e.f); liveNodes.add(e.t); } }); nodeSel.classed("dim", n => !liveNodes.has(n.id)); }
+      });
+      chipsEl.appendChild(chip);
+    });
+  }
+  function renderEmpty() { panel.innerHTML = ""; }
+  function renderPanel(d) {
+    const ins = (inEdges.get(d.id) || []).slice().sort((a, b) => b.weight - a.weight);
+    const outs = (outEdges.get(d.id) || []).slice().sort((a, b) => b.weight - a.weight);
+    const totalRel = ins.length + outs.length;
+    let outHtml = "";
+    if (outs.length) { outHtml = `<div class="section"><h3>Outgoing &middot; ${outs.length}</h3><div class="preds-box">` + outs.map(e => `<div class="predrow"><b>${escapeHtml(d.id)}</b> <span class="pred">${escapeHtml(prettyPred(e.p))}</span> <b>${escapeHtml(e.t)}</b></div>`).join("") + `</div></div>`; }
+    let inHtml = "";
+    if (ins.length) { inHtml = `<div class="section"><h3>Incoming &middot; ${ins.length}</h3><div class="preds-box">` + ins.map(e => `<div class="predrow"><b>${escapeHtml(e.f)}</b> <span class="pred">${escapeHtml(prettyPred(e.p))}</span> <b>${escapeHtml(d.id)}</b></div>`).join("") + `</div></div>`; }
+    panel.innerHTML = `<div class="ptitle">Focused concept</div><h2>${escapeHtml(d.id)}</h2><div><span class="sidechip solo">${escapeHtml(SOLO_LABEL)}</span></div><div class="meta" style="margin-top:10px">${totalRel} relationship${totalRel === 1 ? "" : "s"}</div>${outHtml}${inHtml}`;
+  }
+  renderEmpty();
+  search.addEventListener("input", () => { const q = search.value.trim().toLowerCase(); if (!q) { if (!focused) clearFocus(); return; } const match = DATA.nodes.find(n => n.id.toLowerCase().includes(q)); if (match) focusNode(match); });
+  function showTip(ev, d) {
+    const e = d.edge;
+    tip.innerHTML = `<div class="tt-pair"><em>${escapeHtml(e.f)}</em> &nbsp;<span class="tt-pred">${escapeHtml(prettyPred(e.p))}</span>&nbsp; <em>${escapeHtml(e.t)}</em></div><div class="tt-meta">${escapeHtml(SOLO_LABEL)}</div>`;
+    tip.classList.add("show");
+    moveTip(ev);
+  }
+  function moveTip(ev) { const rb = stage.getBoundingClientRect(); const x = ev.clientX - rb.left + 14; const y = ev.clientY - rb.top + 14; const tw = tip.offsetWidth, th = tip.offsetHeight; const cx = Math.min(x, rb.width - tw - 8); const cy = Math.min(y, rb.height - th - 8); tip.style.transform = `translate(${cx}px,${cy}px)`; }
+  function hideTip() { tip.classList.remove("show"); }
+  function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c])); }
+  window.addEventListener("resize", () => { W = stage.clientWidth; H = stage.clientHeight; svg.attr("viewBox", [0, 0, W, H]); sim.force("x", d3.forceX(W * 0.5).strength(0.06)); sim.force("y", d3.forceY(H / 2).strength(0.05)); sim.alpha(0.3).restart(); });
+</script>
+</body>
+</html>

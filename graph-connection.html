@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Where the AUP meets the ISP</title>
+<style>
+  :root {
+    --bg:        #fafaf7;
+    --panel:     #ffffff;
+    --ink:       #1a1a1a;
+    --ink-soft:  #4a4a4a;
+    --ink-faint: #8a8a8a;
+    --rule:      #e6e3dc;
+    --rule-soft: #efece5;
+    --col-a:       #1565a8;
+    --col-a-soft:  #d6e6f4;
+    --col-b:       #c0392b;
+    --col-b-soft:  #f6dad4;
+    --col-bridge:  #d4a017;
+    --col-bridge-soft:#faecc4;
+    --col-solo:    #d4a017;
+    --col-solo-soft: #faecc4;
+    --edge:        #c7c2b6;
+    --edge-a:      #4d8bc1;
+    --edge-b:      #d36b5d;
+    --edge-bridge: #b8851a;
+    --edge-solo:   #b8851a;
+    --serif:     "Iowan Old Style","Charter","Georgia","Cambria",ui-serif,serif;
+    --sans:      "Inter","Helvetica Neue",-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+    --mono:      "SF Mono","Menlo","Monaco",ui-monospace,monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 9px 18px 8px; border-bottom: 1px solid var(--rule); background: var(--panel); gap: 18px; min-height: 34px; flex-wrap: wrap; }
+  .topbar .eyebrow { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .14em; color: var(--ink-faint); white-space: nowrap; }
+  .topbar .eyebrow .accent { color: var(--col-solo); font-weight: 600; }
+  .topbar .eyebrow .accent.a { color: var(--col-a); }
+  .topbar .eyebrow .accent.b { color: var(--col-b); }
+  .topbar .topstats { display: flex; flex-wrap: wrap; gap: 14px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); letter-spacing: .02em; }
+  .topbar .topstats .stat b { color: var(--ink); font-weight: 600; margin-right: 4px; }
+  .topbar .topstats .stat.solo b { color: var(--col-solo); }
+  .topbar .topstats .stat.a b { color: var(--col-a); }
+  .topbar .topstats .stat.b b { color: var(--col-b); }
+  .topbar .topstats .stat.bridge b { color: var(--col-bridge); }
+  .topbar .topstats .sep { color: var(--ink-faint); opacity: .6; }
+  main { flex: 1; display: grid; grid-template-columns: 1fr 0px; min-height: 0; transition: grid-template-columns .28s cubic-bezier(.2,.7,.2,1); }
+  main.has-focus { grid-template-columns: 1fr 360px; }
+  #stage { position: relative; background: radial-gradient(ellipse 60% 80% at 22% 50%, #d6e6f4 0%, transparent 70%), radial-gradient(ellipse 60% 80% at 78% 50%, #f6dad4 0%, transparent 70%), var(--bg); overflow: hidden; }
+  #graph { width: 100%; height: 100%; display: block; }
+  .zone-label { position: absolute; top: 14px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .14em; color: var(--ink-faint); pointer-events: none; }
+  .zone-label.a { left: 24px; color: var(--col-a); opacity: .8; }
+  .zone-label.b { right: 24px; color: var(--col-b); opacity: .8; }
+  .zone-label.bridge { left: 50%; transform: translateX(-50%); color: var(--col-bridge); }
+  .legend { position: absolute; left: 24px; bottom: 22px; background: rgba(255,255,255,.92); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; font-size: 11px; color: var(--ink-soft); line-height: 1.5; pointer-events: none; backdrop-filter: blur(6px); max-width: 290px; }
+  .legend .row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .legend .row:last-child { margin-bottom: 0; }
+  .legend .swatch { width: 10px; height: 10px; border-radius: 50%; }
+  .legend .swatch.a { background: var(--col-a); }
+  .legend .swatch.b { background: var(--col-b); }
+  .legend .swatch.bridge { background: var(--col-bridge); }
+  .legend .swatch.solo { background: var(--col-solo); }
+  .legend .swatch.backbone { background: linear-gradient(90deg, var(--col-bridge) 0%, var(--col-bridge) 100%); height: 3px; border-radius: 2px; width: 18px; }
+  .controls { position: absolute; right: 18px; top: 44px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .search { background: rgba(255,255,255,.97); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 10px; font-family: var(--sans); font-size: 12px; width: 220px; color: var(--ink); outline: none; }
+  .search:focus { border-color: var(--col-bridge); }
+  .reset { background: var(--ink); color: #fff; border: 0; border-radius: 4px; padding: 5px 11px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; opacity: 0; transition: opacity .2s; }
+  .reset.show { opacity: 1; }
+  .toggle { background: rgba(255,255,255,.97); border: 1px solid var(--rule); color: var(--ink-soft); border-radius: 4px; padding: 5px 11px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; }
+  .toggle.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .chips-wrap { position: absolute; right: 18px; top: 152px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; max-width: 290px; }
+  .chips-wrap .chips-label { font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+  .chip { background: rgba(255,255,255,.97); border: 1px solid var(--rule); border-radius: 12px; padding: 3px 9px; font-family: var(--serif); font-style: italic; font-size: 11.5px; color: var(--ink-soft); cursor: pointer; line-height: 1.2; transition: background .12s, color .12s, border-color .12s; white-space: nowrap; }
+  .chip .ct { font-family: var(--mono); font-style: normal; font-size: 9.5px; color: var(--ink-faint); margin-left: 5px; }
+  .chip:hover { border-color: var(--col-bridge); color: var(--ink); }
+  .chip.on { background: var(--col-bridge); border-color: var(--col-bridge); color: #fff; }
+  .chip.on .ct { color: rgba(255,255,255,.85); }
+  aside { border-left: 1px solid var(--rule); background: var(--panel); padding: 26px 28px 36px; overflow-y: auto; overflow-x: hidden; min-height: 0; opacity: 0; transition: opacity .2s ease .04s; }
+  main.has-focus aside { opacity: 1; }
+  main:not(.has-focus) aside { padding: 0; border-left: 0; }
+  .ptitle { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); margin-bottom: 8px; }
+  aside h2 { font-family: var(--serif); font-size: 22px; font-weight: 500; margin: 0 0 8px; line-height: 1.25; letter-spacing: -.005em; }
+  .sidechip { display: inline-block; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; padding: 3px 8px; border-radius: 3px; margin-right: 6px; color: #fff; }
+  .sidechip.a { background: var(--col-a); }
+  .sidechip.b { background: var(--col-b); }
+  .sidechip.bridge { background: var(--col-bridge); }
+  .sidechip.solo { background: var(--col-solo); }
+  .meta { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-bottom: 18px; }
+  .section { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--rule-soft); }
+  .section h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); margin: 0 0 10px; font-weight: 600; }
+  .preds-box { display: flex; flex-direction: column; gap: 4px; }
+  .predrow { font-family: var(--serif); font-size: 13px; color: var(--ink-soft); padding: 4px 0; line-height: 1.4; }
+  .predrow b { color: var(--ink); font-weight: 600; }
+  .predrow .pred { color: var(--col-bridge); font-style: italic; font-family: var(--serif); }
+  .tooltip { position: absolute; pointer-events: none; background: var(--ink); color: #fff; padding: 11px 13px; border-radius: 6px; font-size: 12px; line-height: 1.45; max-width: 380px; box-shadow: 0 6px 20px rgba(0,0,0,.18); opacity: 0; transition: opacity .12s; z-index: 50; }
+  .tooltip.show { opacity: 1; }
+  .tooltip .tt-pred { font-family: var(--serif); font-size: 13px; font-style: italic; color: #ffb98a; margin-bottom: 6px; }
+  .tooltip .tt-meta { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: #ffb98a; margin-bottom: 6px; }
+  .tooltip .tt-pair { font-family: var(--serif); font-size: 13px; margin-bottom: 8px; }
+  .tooltip .tt-pair em { color: #ffb98a; font-style: normal; font-weight: 500; }
+  .edge { fill: none; stroke: var(--edge); stroke-opacity: .5; transition: stroke .15s, stroke-opacity .15s, stroke-width .15s; }
+  .edge.a { stroke: var(--edge-a); stroke-opacity: .55; }
+  .edge.b { stroke: var(--edge-b); stroke-opacity: .55; }
+  .edge.bridge { stroke: var(--edge-bridge); stroke-opacity: .7; }
+  .edge.solo { stroke: var(--edge-solo); stroke-opacity: .55; }
+  .edge.backbone { stroke-opacity: .9; }
+  .edge.dim { stroke-opacity: .07; }
+  .edge.focus { stroke-opacity: 1; stroke-width: 2.5px; }
+  .arrowhead { fill: var(--edge); }
+  .arrowhead.a { fill: var(--edge-a); }
+  .arrowhead.b { fill: var(--edge-b); }
+  .arrowhead.bridge { fill: var(--edge-bridge); }
+  .arrowhead.solo { fill: var(--edge-solo); }
+  .node circle { stroke: #fff; stroke-width: 1.5px; cursor: pointer; transition: opacity .15s, stroke .15s, stroke-width .15s; }
+  .node.a circle { fill: var(--col-a); }
+  .node.b circle { fill: var(--col-b); }
+  .node.bridge circle { fill: var(--col-bridge); }
+  .node.solo circle { fill: var(--col-solo); }
+  .node.dim circle { opacity: .12; }
+  .node.focus circle { stroke: #fff; stroke-width: 3px; }
+  .node text { font-family: var(--serif); font-size: 11.5px; fill: var(--ink); pointer-events: none; user-select: none; text-anchor: middle; dominant-baseline: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; opacity: 0; transition: opacity .12s; }
+  .node text.show { opacity: 1; }
+  .node.dim text { opacity: .12 !important; }
+  .node.focus text { opacity: 1 !important; font-weight: 600; }
+  .node.bridge text.show { font-weight: 500; }
+  .node:hover text { opacity: 1; }
+  .edge-label { font-family: var(--serif); font-size: 10.5px; font-style: italic; fill: var(--ink-faint); text-anchor: middle; pointer-events: none; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; opacity: 0; transition: opacity .15s; }
+  .edge-label.show { opacity: 1; fill: var(--col-bridge); }
+  .edge-label.alwaysShow { opacity: 1; }
+  @media (max-width: 1100px) {
+    main, main.has-focus { grid-template-columns: 1fr; grid-template-rows: 1fr 0px; }
+    main.has-focus { grid-template-rows: 1fr 360px; }
+    aside { border-left: 0; }
+    main.has-focus aside { border-top: 1px solid var(--rule); max-height: 380px; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="eyebrow">Where the <span class="accent a">AUP</span> meets the <span class="accent b">ISP</span> &middot; cross-policy bridge view</span>
+  <span class="topstats"><span class="stat bridge"><b>87</b>bridge concepts</span><span class="sep">&middot;</span><span class="stat bridge"><b>85</b>backbone edges</span><span class="sep">&middot;</span><span class="stat"><b>220</b>relationships</span><span class="sep">&middot;</span><span class="stat"><b>59</b>distinct verbs</span><span class="sep">&middot;</span><span class="stat bridge">top bridge <b>Employee</b> (49)</span></span>
+</header>
+<main>
+  <section id="stage">
+    <div class="zone-label a">ACCEPTABLE USE POLICY</div><div class="zone-label bridge">SHARED VOCABULARY</div><div class="zone-label b">INFORMATION SECURITY POLICY</div>
+    <svg id="graph">
+      <defs>
+        <marker id="arrow" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,-5L10,0L0,5" class="arrowhead"/></marker>
+        <marker id="arrow-a" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,-5L10,0L0,5" class="arrowhead a"/></marker>
+        <marker id="arrow-b" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,-5L10,0L0,5" class="arrowhead b"/></marker>
+        <marker id="arrow-bridge" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,-5L10,0L0,5" class="arrowhead bridge"/></marker>
+        <marker id="arrow-solo" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,-5L10,0L0,5" class="arrowhead solo"/></marker>
+      </defs>
+    </svg>
+    <div class="controls">
+      <input class="search" id="search" placeholder="Find a concept..." />
+      <button class="toggle" id="toggle-preds">Show predicates</button>
+      <button class="reset" id="reset">Reset view</button>
+    </div>
+    <div class="chips-wrap" id="chips-wrap">
+      <div class="chips-label">Filter by predicate</div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="legend">
+      <div class="row"><span class="swatch a"></span> Concept inside the AUP only</div>
+      <div class="row"><span class="swatch b"></span> Concept inside the ISP only</div>
+      <div class="row"><span class="swatch bridge"></span> Bridge concept, inside both</div>
+      <div class="row"><span class="swatch backbone"></span> Thicker line = relationship shared by both policies</div>
+      <div class="row" style="margin-top:6px">Drag. Click a concept to focus. Hover any arrow.</div>
+    </div>
+    <div class="tooltip" id="tip"></div>
+  </section>
+  <aside id="panel"></aside>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+  const DATA = {"doc_a":"Acceptable Use Policy","doc_b":"Information Security Policy","totals":{"policy_a_topics":92,"policy_b_topics":163,"shared_topics":9,"scope_topics":246,"nodes":97,"bridge_nodes":87,"edges":220,"backbone_edges":85,"distinct_predicates":59},"nodes":[{"id":"Employee","side":"BRIDGE","topics_a":22,"topics_b":27,"topics_total":49,"degree":34,"is_bridge":true},{"id":"Information Security Policies","side":"BRIDGE","topics_a":5,"topics_b":5,"topics_total":10,"degree":16,"is_bridge":true},{"id":"Information Security Management System","side":"BRIDGE","topics_a":2,"topics_b":3,"topics_total":5,"degree":15,"is_bridge":true},{"id":"Acceptable Use","side":"BRIDGE","topics_a":12,"topics_b":5,"topics_total":17,"degree":12,"is_bridge":true},{"id":"Information","side":"BRIDGE","topics_a":4,"topics_b":7,"topics_total":11,"degree":10,"is_bridge":true},{"id":"Internal Environment","side":"BRIDGE","topics_a":1,"topics_b":5,"topics_total":6,"degree":9,"is_bridge":true},{"id":"Customer Data","side":"BRIDGE","topics_a":7,"topics_b":2,"topics_total":9,"degree":8,"is_bridge":true},{"id":"Incident Response Plan","side":"BRIDGE","topics_a":3,"topics_b":6,"topics_total":9,"degree":8,"is_bridge":true},{"id":"Physical Security Policy","side":"BRIDGE","topics_a":2,"topics_b":5,"topics_total":7,"degree":8,"is_bridge":true},{"id":"Customer","side":"BRIDGE","topics_a":3,"topics_b":9,"topics_total":12,"degree":8,"is_bridge":true},{"id":"Authentication Policy","side":"BRIDGE","topics_a":2,"topics_b":5,"topics_total":7,"degree":8,"is_bridge":true},{"id":"Data Classification Policy","side":"BRIDGE","topics_a":4,"topics_b":4,"topics_total":8,"degree":7,"is_bridge":true},{"id":"Acceptable Use Policies","side":"B","topics_a":0,"topics_b":3,"topics_total":3,"degree":7,"is_bridge":false},{"id":"System","side":"BRIDGE","topics_a":3,"topics_b":7,"topics_total":10,"degree":7,"is_bridge":true},{"id":"Security Policy","side":"BRIDGE","topics_a":2,"topics_b":2,"topics_total":4,"degree":7,"is_bridge":true},{"id":"Confidentiality Agreements","side":"BRIDGE","topics_a":1,"topics_b":2,"topics_total":3,"degree":7,"is_bridge":true},{"id":"Requirement","side":"BRIDGE","topics_a":1,"topics_b":4,"topics_total":5,"degree":7,"is_bridge":true},{"id":"Employment Contract","side":"B","topics_a":0,"topics_b":2,"topics_total":2,"degree":6,"is_bridge":false},{"id":"Authentication","side":"BRIDGE","topics_a":2,"topics_b":12,"topics_total":14,"degree":6,"is_bridge":true},{"id":"Remote Access","side":"BRIDGE","topics_a":3,"topics_b":3,"topics_total":6,"degree":6,"is_bridge":true},{"id":"Risk Management Standard","side":"BRIDGE","topics_a":2,"topics_b":2,"topics_total":4,"degree":6,"is_bridge":true},{"id":"Data Classification Standard","side":"BRIDGE","topics_a":2,"topics_b":2,"topics_total":4,"degree":6,"is_bridge":true},{"id":"Asset Management Policy","side":"BRIDGE","topics_a":3,"topics_b":4,"topics_total":7,"degree":6,"is_bridge":true},{"id":"Contractors","side":"BRIDGE","topics_a":5,"topics_b":2,"topics_total":7,"degree":6,"is_bridge":true},{"id":"Vulnerability Management Policy","side":"BRIDGE","topics_a":4,"topics_b":4,"topics_total":8,"degree":6,"is_bridge":true},{"id":"Encryption Key Management Policy","side":"BRIDGE","topics_a":2,"topics_b":2,"topics_total":4,"degree":6,"is_bridge":true},{"id":"Confidentiality Agreement","side":"A","topics_a":2,"topics_b":0,"topics_total":2,"degree":5,"is_bridge":false},{"id":"New Hires","side":"BRIDGE","topics_a":5,"topics_b":3,"topics_total":8,"degree":5,"is_bridge":true},{"id":"Individual","side":"BRIDGE","topics_a":1,"topics_b":3,"topics_total":4,"degree":5,"is_bridge":true},{"id":"NDA","side":"BRIDGE","topics_a":3,"topics_b":2,"topics_total":5,"degree":5,"is_bridge":true},{"id":"Customer IdP","side":"B","topics_a":0,"topics_b":8,"topics_total":8,"degree":5,"is_bridge":false},{"id":"New Hire","side":"BRIDGE","topics_a":1,"topics_b":1,"topics_total":2,"degree":5,"is_bridge":true},{"id":"Employee Handbook","side":"BRIDGE","topics_a":1,"topics_b":4,"topics_total":5,"degree":5,"is_bridge":true},{"id":"Access","side":"BRIDGE","topics_a":1,"topics_b":8,"topics_total":9,"degree":5,"is_bridge":true},{"id":"User","side":"BRIDGE","topics_a":4,"topics_b":2,"topics_total":6,"degree":5,"is_bridge":true},{"id":"Control","side":"BRIDGE","topics_a":2,"topics_b":6,"topics_total":8,"degree":5,"is_bridge":true},{"id":"Corporate Policies","side":"B","topics_a":0,"topics_b":3,"topics_total":3,"degree":5,"is_bridge":false},{"id":"Confidentiality","side":"BRIDGE","topics_a":2,"topics_b":3,"topics_total":5,"degree":5,"is_bridge":true},{"id":"Mobile Device","side":"BRIDGE","topics_a":6,"topics_b":1,"topics_total":7,"degree":4,"is_bridge":true},{"id":"Third Party","side":"BRIDGE","topics_a":4,"topics_b":4,"topics_total":8,"degree":4,"is_bridge":true},{"id":"Data","side":"BRIDGE","topics_a":4,"topics_b":5,"topics_total":9,"degree":4,"is_bridge":true},{"id":"Acknowledgment Form","side":"BRIDGE","topics_a":2,"topics_b":1,"topics_total":3,"degree":4,"is_bridge":true},{"id":"Company-Supplied Assets","side":"A","topics_a":1,"topics_b":0,"topics_total":1,"degree":4,"is_bridge":false},{"id":"Organization","side":"BRIDGE","topics_a":4,"topics_b":10,"topics_total":14,"degree":4,"is_bridge":true},{"id":"Customer Information","side":"BRIDGE","topics_a":2,"topics_b":3,"topics_total":5,"degree":4,"is_bridge":true},{"id":"Data Classification","side":"BRIDGE","topics_a":5,"topics_b":4,"topics_total":9,"degree":4,"is_bridge":true},{"id":"MFA","side":"BRIDGE","topics_a":1,"topics_b":11,"topics_total":12,"degree":3,"is_bridge":true},{"id":"Privacy Policy","side":"BRIDGE","topics_a":1,"topics_b":4,"topics_total":5,"degree":3,"is_bridge":true},{"id":"Job Function Training","side":"BRIDGE","topics_a":1,"topics_b":1,"topics_total":2,"degree":3,"is_bridge":true},{"id":"Onboarding Process","side":"BRIDGE","topics_a":1,"topics_b":3,"topics_total":4,"degree":3,"is_bridge":true},{"id":"Contract","side":"BRIDGE","topics_a":3,"topics_b":1,"topics_total":4,"degree":3,"is_bridge":true},{"id":"Privacy","side":"BRIDGE","topics_a":3,"topics_b":3,"topics_total":6,"degree":3,"is_bridge":true},{"id":"Email","side":"BRIDGE","topics_a":5,"topics_b":2,"topics_total":7,"degree":3,"is_bridge":true},{"id":"Handling","side":"B","topics_a":0,"topics_b":1,"topics_total":1,"degree":3,"is_bridge":false},{"id":"Privacy Training","side":"BRIDGE","topics_a":1,"topics_b":1,"topics_total":2,"degree":3,"is_bridge":true},{"id":"Employment","side":"BRIDGE","topics_a":2,"topics_b":2,"topics_total":4,"degree":3,"is_bridge":true},{"id":"Production Environment","side":"BRIDGE","topics_a":3,"topics_b":2,"topics_total":5,"degree":3,"is_bridge":true},{"id":"Physical Security","side":"BRIDGE","topics_a":1,"topics_b":4,"topics_total":5,"degree":3,"is_bridge":true},{"id":"Risk Management","side":"BRIDGE","topics_a":2,"topics_b":4,"topics_total":6,"degree":3,"is_bridge":true},{"id":"Personnel","side":"BRIDGE","topics_a":3,"topics_b":2,"topics_total":5,"degree":3,"is_bridge":true},{"id":"Unauthorized Access","side":"BRIDGE","topics_a":1,"topics_b":4,"topics_total":5,"degree":3,"is_bridge":true},{"id":"Privacy Awareness Training","side":"BRIDGE","topics_a":1,"topics_b":1,"topics_total":2,"degree":3,"is_bridge":true},{"id":"Information Systems","side":"BRIDGE","topics_a":1,"topics_b":1,"topics_total":2,"degree":3,"is_bridge":true},{"id":"Storing","side":"B","topics_a":0,"topics_b":1,"topics_total":1,"degree":3,"is_bridge":false},{"id":"Information Security Training","side":"BRIDGE","topics_a":1,"topics_b":1,"topics_total":2,"degree":3,"is_bridge":true},{"id":"Security Policies","side":"BRIDGE","topics_a":1,"topics_b":2,"topics_total":3,"degree":3,"is_bridge":true},{"id":"Code of Conduct Policy","side":"BRIDGE","topics_a":3,"topics_b":2,"topics_total":5,"degree":3,"is_bridge":true},{"id":"Staff Awareness Training","side":"A","topics_a":1,"topics_b":0,"topics_total":1,"degree":3,"is_bridge":false},{"id":"Staff","side":"BRIDGE","topics_a":5,"topics_b":3,"topics_total":8,"degree":3,"is_bridge":true},{"id":"Third-Party Software Security Policy","side":"BRIDGE","topics_a":1,"topics_b":1,"topics_total":2,"degree":3,"is_bridge":true},{"id":"Disposing","side":"B","topics_a":0,"topics_b":1,"topics_total":1,"degree":3,"is_bridge":false},{"id":"Client Data","side":"BRIDGE","topics_a":1,"topics_b":3,"topics_total":4,"degree":2,"is_bridge":true},{"id":"Incident Response","side":"BRIDGE","topics_a":2,"topics_b":3,"topics_total":5,"degree":2,"is_bridge":true},{"id":"Security Awareness Training","side":"BRIDGE","topics_a":1,"topics_b":2,"topics_total":3,"degree":2,"is_bridge":true},{"id":"Mobile Device Policy","side":"BRIDGE","topics_a":4,"topics_b":1,"topics_total":5,"degree":2,"is_bridge":true},{"id":"Roles and Responsibilities","side":"BRIDGE","topics_a":1,"topics_b":6,"topics_total":7,"degree":2,"is_bridge":true},{"id":"Environment","side":"BRIDGE","topics_a":2,"topics_b":5,"topics_total":7,"degree":2,"is_bridge":true},{"id":"Information Security","side":"BRIDGE","topics_a":1,"topics_b":12,"topics_total":13,"degree":2,"is_bridge":true},{"id":"ISO 27001","side":"BRIDGE","topics_a":1,"topics_b":6,"topics_total":7,"degree":2,"is_bridge":true},{"id":"Encryption","side":"BRIDGE","topics_a":3,"topics_b":4,"topics_total":7,"degree":2,"is_bridge":true},{"id":"Social Media","side":"BRIDGE","topics_a":2,"topics_b":1,"topics_total":3,"degree":2,"is_bridge":true},{"id":"Internet","side":"BRIDGE","topics_a":3,"topics_b":1,"topics_total":4,"degree":2,"is_bridge":true},{"id":"Encryption Key Management","side":"BRIDGE","topics_a":2,"topics_b":2,"topics_total":4,"degree":2,"is_bridge":true},{"id":"Mobile Devices","side":"BRIDGE","topics_a":3,"topics_b":1,"topics_total":4,"degree":2,"is_bridge":true},{"id":"Assets","side":"BRIDGE","topics_a":2,"topics_b":5,"topics_total":7,"degree":2,"is_bridge":true},{"id":"Management","side":"BRIDGE","topics_a":3,"topics_b":1,"topics_total":4,"degree":2,"is_bridge":true},{"id":"Secure SDLC Policy","side":"BRIDGE","topics_a":1,"topics_b":2,"topics_total":3,"degree":1,"is_bridge":true},{"id":"Security Patches","side":"BRIDGE","topics_a":1,"topics_b":2,"topics_total":3,"degree":1,"is_bridge":true},{"id":"Information Classification","side":"BRIDGE","topics_a":2,"topics_b":2,"topics_total":4,"degree":1,"is_bridge":true},{"id":"Third-Party Risk Management Policy","side":"BRIDGE","topics_a":1,"topics_b":2,"topics_total":3,"degree":1,"is_bridge":true},{"id":"Data Handling","side":"BRIDGE","topics_a":1,"topics_b":2,"topics_total":3,"degree":1,"is_bridge":true},{"id":"Security Configuration","side":"BRIDGE","topics_a":1,"topics_b":2,"topics_total":3,"degree":1,"is_bridge":true},{"id":"Applications","side":"BRIDGE","topics_a":1,"topics_b":3,"topics_total":4,"degree":1,"is_bridge":true},{"id":"Laptops","side":"BRIDGE","topics_a":3,"topics_b":2,"topics_total":5,"degree":1,"is_bridge":true},{"id":"Removable Media","side":"BRIDGE","topics_a":9,"topics_b":2,"topics_total":11,"degree":1,"is_bridge":true},{"id":"Personal Data","side":"BRIDGE","topics_a":1,"topics_b":3,"topics_total":4,"degree":1,"is_bridge":true},{"id":"Physical Access","side":"BRIDGE","topics_a":1,"topics_b":3,"topics_total":4,"degree":1,"is_bridge":true}],"edges":[{"f":"Asset Management Policy","p":"INCLUDES_CONTROLS_FOR","t":"Acceptable Use","weight":1,"side":"B","backbone":false},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Information","weight":2,"side":"BRIDGE","backbone":false},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Assets","weight":3,"side":"BRIDGE","backbone":true},{"f":"Employee","p":"SIGNS","t":"Employee Handbook","weight":1,"side":"B","backbone":false},{"f":"Employee Handbook","p":"REQUIRES","t":"Confidentiality","weight":1,"side":"B","backbone":false},{"f":"Confidentiality","p":"APPLIES_TO","t":"Customer Data","weight":1,"side":"B","backbone":false},{"f":"Confidentiality","p":"GOVERNS","t":"Confidentiality Agreements","weight":1,"side":"B","backbone":false},{"f":"Confidentiality","p":"PROTECTS","t":"Customer Information","weight":1,"side":"B","backbone":false},{"f":"Acceptable Use","p":"GOVERNS","t":"Acceptable Use Policies","weight":1,"side":"B","backbone":false},{"f":"Contractors","p":"RESPONSIBLE_FOR","t":"Information","weight":1,"side":"A","backbone":false},{"f":"Information Systems","p":"INCLUDES","t":"Email","weight":1,"side":"A","backbone":false},{"f":"Information Systems","p":"INCLUDES","t":"Internet","weight":1,"side":"A","backbone":false},{"f":"Information Systems","p":"INCLUDES","t":"Social Media","weight":1,"side":"A","backbone":false},{"f":"Data Classification","p":"GOVERNS","t":"Data Classification Policy","weight":1,"side":"A","backbone":false},{"f":"Staff","p":"ACCEPTS_AS_PART_OF","t":"Contract","weight":1,"side":"A","backbone":false},{"f":"Contract","p":"REQUIRED_BEFORE","t":"Employment","weight":1,"side":"A","backbone":false},{"f":"Organization","p":"DEFINES","t":"Asset Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Organization","p":"ENFORCES","t":"Asset Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Asset Management Policy","p":"INCLUDES","t":"Control","weight":1,"side":"BRIDGE","backbone":true},{"f":"Employee","p":"COMPLETES","t":"Information Security Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Employee","p":"COMPLETES","t":"Privacy Awareness Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Employee","p":"COMPLETES","t":"Job Function Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Contractors","p":"COMPLETES","t":"Information Security Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Contractors","p":"COMPLETES","t":"Privacy Awareness Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Contractors","p":"COMPLETES","t":"Job Function Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Third Party","p":"COMPLETES","t":"Information Security Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Third Party","p":"COMPLETES","t":"Privacy Awareness Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Third Party","p":"COMPLETES","t":"Job Function Training","weight":1,"side":"BRIDGE","backbone":true},{"f":"Security Patches","p":"ARE_DEPLOYED_ON","t":"Laptops","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"IS_GRANTED_ACCESS_TO","t":"Information","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"SIGNS","t":"Code of Conduct Policy","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"ACKNOWLEDGES","t":"Acknowledgment Form","weight":1,"side":"BRIDGE","backbone":true},{"f":"Contractors","p":"ACKNOWLEDGES","t":"Acknowledgment Form","weight":1,"side":"BRIDGE","backbone":true},{"f":"Acknowledgment Form","p":"ACKNOWLEDGES","t":"Information Security Policies","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"GOVERNS","t":"Information Security","weight":1,"side":"A","backbone":false},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Remote Access","weight":1,"side":"BRIDGE","backbone":true},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Email","weight":1,"side":"BRIDGE","backbone":true},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Internet","weight":1,"side":"BRIDGE","backbone":true},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Removable Media","weight":4,"side":"BRIDGE","backbone":true},{"f":"Acceptable Use","p":"APPLIES_TO","t":"Social Media","weight":1,"side":"BRIDGE","backbone":true},{"f":"Privacy","p":"APPLIES_TO","t":"Customer Information","weight":1,"side":"A","backbone":false},{"f":"Control","p":"ENSURES","t":"Acceptable Use","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"SIGNS","t":"Employment Contract","weight":1,"side":"B","backbone":false},{"f":"Employment Contract","p":"INCLUDES","t":"Employee Handbook","weight":1,"side":"B","backbone":false},{"f":"Employment Contract","p":"INCLUDES","t":"NDA","weight":1,"side":"B","backbone":false},{"f":"Employment Contract","p":"REQUIRED_BEFORE","t":"Access","weight":1,"side":"B","backbone":false},{"f":"Access","p":"APPLIES_TO","t":"System","weight":1,"side":"A","backbone":false},{"f":"Access","p":"APPLIES_TO","t":"Data","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"ACKNOWLEDGES","t":"NDA","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"MUST_SIGN","t":"Employee Handbook","weight":1,"side":"A","backbone":false},{"f":"Customer","p":"REFER_TO","t":"ISO 27001","weight":1,"side":"A","backbone":false},{"f":"User","p":"MADE_AWARE_OF","t":"Requirement","weight":1,"side":"A","backbone":false},{"f":"User","p":"TRAINED_ON","t":"Requirement","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"ACCESSES","t":"Company-Supplied Assets","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"USES","t":"Company-Supplied Assets","weight":1,"side":"A","backbone":false},{"f":"Company-Supplied Assets","p":"INCLUDES","t":"Email","weight":1,"side":"A","backbone":false},{"f":"Company-Supplied Assets","p":"INCLUDES","t":"Mobile Devices","weight":1,"side":"A","backbone":false},{"f":"Individual","p":"INCLUDES","t":"Employee","weight":1,"side":"A","backbone":false},{"f":"Individual","p":"INCLUDES","t":"Contractors","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"SIGNS","t":"Acknowledgment Form","weight":1,"side":"A","backbone":false},{"f":"Personnel","p":"ACKNOWLEDGES","t":"Confidentiality Agreements","weight":1,"side":"B","backbone":false},{"f":"Personnel","p":"ACKNOWLEDGES","t":"Acceptable Use Policies","weight":1,"side":"B","backbone":false},{"f":"Confidentiality Agreements","p":"PROTECTS","t":"Customer Information","weight":2,"side":"BRIDGE","backbone":false},{"f":"Acceptable Use Policies","p":"PROTECTS","t":"Customer Information","weight":1,"side":"B","backbone":false},{"f":"Confidentiality Agreements","p":"CONDITION_OF","t":"Employment","weight":1,"side":"B","backbone":false},{"f":"Acceptable Use Policies","p":"CONDITION_OF","t":"Employment","weight":1,"side":"B","backbone":false},{"f":"Confidentiality Agreements","p":"IS_PART_OF","t":"Employment Contract","weight":1,"side":"B","backbone":false},{"f":"Acceptable Use Policies","p":"IS_PART_OF","t":"Employment Contract","weight":1,"side":"B","backbone":false},{"f":"New Hires","p":"ACKNOWLEDGES","t":"NDA","weight":1,"side":"A","backbone":false},{"f":"NDA","p":"ACKNOWLEDGES_COMPLIANCE_WITH","t":"Information Security Policies","weight":1,"side":"A","backbone":false},{"f":"New Hires","p":"ACKNOWLEDGES","t":"Confidentiality Agreement","weight":1,"side":"A","backbone":false},{"f":"Staff","p":"ACKNOWLEDGES","t":"Confidentiality Agreement","weight":1,"side":"A","backbone":false},{"f":"User","p":"ACKNOWLEDGES","t":"Confidentiality Agreement","weight":1,"side":"A","backbone":false},{"f":"Confidentiality Agreement","p":"REQUIRED_BEFORE_ACCESSING","t":"System","weight":1,"side":"A","backbone":false},{"f":"Confidentiality Agreement","p":"REQUIRED_BEFORE_ACCESSING","t":"Data","weight":1,"side":"A","backbone":false},{"f":"Data Classification Policy","p":"COMPLIES_WITH","t":"Data Classification","weight":1,"side":"BRIDGE","backbone":true},{"f":"Employee","p":"ACKNOWLEDGES","t":"Confidentiality Agreements","weight":1,"side":"A","backbone":false},{"f":"Management","p":"ACKNOWLEDGES","t":"Confidentiality Agreements","weight":1,"side":"A","backbone":false},{"f":"Authentication","p":"RELIES_ON","t":"Customer IdP","weight":6,"side":"B","backbone":false},{"f":"Customer IdP","p":"SUPPORTS","t":"MFA","weight":4,"side":"B","backbone":false},{"f":"Customer IdP","p":"MANAGES","t":"Authentication","weight":1,"side":"B","backbone":false},{"f":"Remote Access","p":"APPLIES_TO","t":"Data","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"USES","t":"Remote Access","weight":1,"side":"A","backbone":false},{"f":"Remote Access","p":"APPLIES_TO","t":"Information","weight":1,"side":"A","backbone":false},{"f":"Remote Access","p":"APPLIES_TO","t":"System","weight":1,"side":"A","backbone":false},{"f":"Remote Access","p":"APPLIES_TO","t":"Applications","weight":1,"side":"A","backbone":false},{"f":"Customer","p":"MANAGES","t":"User","weight":1,"side":"B","backbone":false},{"f":"Customer","p":"MANAGES_IN","t":"Customer IdP","weight":1,"side":"B","backbone":false},{"f":"Customer","p":"IS_RESPONSIBLE_FOR","t":"Customer Data","weight":1,"side":"A","backbone":false},{"f":"Customer","p":"GRANTS_ACCESS_TO","t":"Customer Data","weight":1,"side":"A","backbone":false},{"f":"Physical Security","p":"PROTECTS","t":"Assets","weight":1,"side":"B","backbone":false},{"f":"Acceptable Use Policies","p":"LAYS_OUT","t":"Requirement","weight":1,"side":"B","backbone":false},{"f":"Acceptable Use Policies","p":"GOVERNS","t":"Acceptable Use","weight":1,"side":"B","backbone":false},{"f":"Confidentiality","p":"APPLIES_TO","t":"Information","weight":1,"side":"B","backbone":false},{"f":"Management","p":"HAS_SELECTED","t":"Individual","weight":1,"side":"B","backbone":false},{"f":"Individual","p":"RESPONSIBLE_FOR","t":"Privacy Policy","weight":1,"side":"B","backbone":false},{"f":"New Hire","p":"ACKNOWLEDGES","t":"NDA","weight":1,"side":"A","backbone":false},{"f":"New Hire","p":"ACKNOWLEDGES","t":"Contract","weight":1,"side":"A","backbone":false},{"f":"New Hire","p":"ACKNOWLEDGES","t":"Code of Conduct Policy","weight":2,"side":"BRIDGE","backbone":false},{"f":"New Hire","p":"ACKNOWLEDGES","t":"Privacy Policy","weight":1,"side":"A","backbone":false},{"f":"Personal Data","p":"PROTECTED_FROM","t":"Unauthorized Access","weight":1,"side":"B","backbone":false},{"f":"Internal Environment","p":"SCOPED_AS","t":"Environment","weight":3,"side":"BRIDGE","backbone":true},{"f":"Authentication Policy","p":"COMPLIES_WITH","t":"ISO 27001","weight":3,"side":"B","backbone":false},{"f":"Authentication Policy","p":"INCLUDES","t":"MFA","weight":3,"side":"B","backbone":false},{"f":"Authentication Policy","p":"COMMUNICATED_TO","t":"Employee","weight":2,"side":"BRIDGE","backbone":true},{"f":"Authentication Policy","p":"APPLIES_TO","t":"Internal Environment","weight":4,"side":"BRIDGE","backbone":true},{"f":"Organization","p":"HAS","t":"Control","weight":1,"side":"B","backbone":false},{"f":"Control","p":"INCLUDES","t":"Incident Response Plan","weight":1,"side":"B","backbone":false},{"f":"Incident Response Plan","p":"GOVERNS","t":"Incident Response","weight":2,"side":"BRIDGE","backbone":true},{"f":"Client Data","p":"SCOPED_AS","t":"Data","weight":1,"side":"B","backbone":false},{"f":"Information Security Management System","p":"INCLUDES","t":"Security Policies","weight":1,"side":"BRIDGE","backbone":true},{"f":"Security Policies","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Authentication Policy","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"BRIDGE","backbone":true},{"f":"Authentication Policy","p":"GOVERNS","t":"Authentication","weight":2,"side":"BRIDGE","backbone":true},{"f":"Data Classification Standard","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"BRIDGE","backbone":true},{"f":"Data Classification Standard","p":"GOVERNS","t":"Data Classification","weight":1,"side":"BRIDGE","backbone":true},{"f":"Encryption Key Management Policy","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"BRIDGE","backbone":true},{"f":"Encryption Key Management Policy","p":"GOVERNS","t":"Encryption Key Management","weight":1,"side":"BRIDGE","backbone":true},{"f":"Vulnerability Management Policy","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"BRIDGE","backbone":true},{"f":"Incident Response Plan","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"BRIDGE","backbone":true},{"f":"Risk Management Standard","p":"IS_PART_OF","t":"Information Security Management System","weight":1,"side":"BRIDGE","backbone":true},{"f":"Risk Management Standard","p":"GOVERNS","t":"Risk Management","weight":1,"side":"BRIDGE","backbone":true},{"f":"Security Policy","p":"COMMUNICATED_TO","t":"Staff","weight":1,"side":"B","backbone":false},{"f":"Privacy Training","p":"IS_PART_OF","t":"Onboarding Process","weight":1,"side":"B","backbone":false},{"f":"Security Policies","p":"INTRODUCED_TO","t":"New Hires","weight":1,"side":"B","backbone":false},{"f":"New Hires","p":"IS_PART_OF","t":"Onboarding Process","weight":1,"side":"B","backbone":false},{"f":"Information Security","p":"RELATES_TO","t":"Client Data","weight":1,"side":"B","backbone":false},{"f":"Customer","p":"RESPONSIBLE_FOR","t":"Authentication","weight":2,"side":"B","backbone":false},{"f":"Corporate Policies","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"B","backbone":false},{"f":"Employee","p":"ACKNOWLEDGES","t":"Corporate Policies","weight":1,"side":"B","backbone":false},{"f":"Information Security Policies","p":"INCLUDES","t":"Asset Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"INCLUDES","t":"Data Classification Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"INCLUDES","t":"Incident Response Plan","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"INCLUDES","t":"Mobile Device Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"INCLUDES","t":"Physical Security Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"INCLUDES","t":"Secure SDLC Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"INCLUDES","t":"Third-Party Risk Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"INCLUDES","t":"Vulnerability Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"COVERS","t":"Data Classification Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"COVERS","t":"Vulnerability Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"COVERS","t":"Asset Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Policies","p":"COMMUNICATED_TO","t":"Third Party","weight":1,"side":"BRIDGE","backbone":true},{"f":"Roles and Responsibilities","p":"DEFINED_FOR","t":"Individual","weight":1,"side":"B","backbone":false},{"f":"Data Classification Policy","p":"CLASSIFIES","t":"Information","weight":1,"side":"B","backbone":false},{"f":"Data Classification Policy","p":"CLASSIFIES","t":"System","weight":1,"side":"B","backbone":false},{"f":"Data Classification Policy","p":"DEFINES","t":"Requirement","weight":1,"side":"B","backbone":false},{"f":"Requirement","p":"GOVERNS","t":"Storing","weight":1,"side":"B","backbone":false},{"f":"Requirement","p":"GOVERNS","t":"Handling","weight":1,"side":"B","backbone":false},{"f":"Requirement","p":"GOVERNS","t":"Disposing","weight":1,"side":"B","backbone":false},{"f":"Storing","p":"APPLIES_TO","t":"Information","weight":1,"side":"B","backbone":false},{"f":"Storing","p":"APPLIES_TO","t":"System","weight":1,"side":"B","backbone":false},{"f":"Handling","p":"APPLIES_TO","t":"Information","weight":1,"side":"B","backbone":false},{"f":"Handling","p":"APPLIES_TO","t":"System","weight":1,"side":"B","backbone":false},{"f":"Disposing","p":"APPLIES_TO","t":"Information","weight":1,"side":"B","backbone":false},{"f":"Disposing","p":"APPLIES_TO","t":"System","weight":1,"side":"B","backbone":false},{"f":"Security Policy","p":"COVERS","t":"Information Classification","weight":1,"side":"BRIDGE","backbone":true},{"f":"Security Policy","p":"COVERS","t":"Privacy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Security Policy","p":"COVERS","t":"Data Handling","weight":1,"side":"BRIDGE","backbone":true},{"f":"Security Policy","p":"COVERS","t":"Encryption","weight":1,"side":"BRIDGE","backbone":true},{"f":"Security Policy","p":"COVERS","t":"Security Configuration","weight":1,"side":"BRIDGE","backbone":true},{"f":"Security Policy","p":"COVERS","t":"Physical Access","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Management System","p":"INCLUDES","t":"Authentication Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Management System","p":"INCLUDES","t":"Data Classification Standard","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Management System","p":"INCLUDES","t":"Encryption Key Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Management System","p":"INCLUDES","t":"Incident Response Plan","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Management System","p":"INCLUDES","t":"Physical Security Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Management System","p":"INCLUDES","t":"Risk Management Standard","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Management System","p":"INCLUDES","t":"Third-Party Software Security Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Information Security Management System","p":"INCLUDES","t":"Vulnerability Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Data Classification Standard","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Encryption Key Management Policy","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Incident Response Plan","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Physical Security Policy","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Risk Management Standard","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Third-Party Software Security Policy","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Vulnerability Management Policy","p":"COMMUNICATED_TO","t":"Employee","weight":1,"side":"BRIDGE","backbone":true},{"f":"Data Classification Standard","p":"APPLIES_TO","t":"Internal Environment","weight":1,"side":"BRIDGE","backbone":true},{"f":"Encryption Key Management Policy","p":"APPLIES_TO","t":"Internal Environment","weight":1,"side":"BRIDGE","backbone":true},{"f":"Incident Response Plan","p":"APPLIES_TO","t":"Internal Environment","weight":1,"side":"BRIDGE","backbone":true},{"f":"Physical Security Policy","p":"APPLIES_TO","t":"Internal Environment","weight":1,"side":"BRIDGE","backbone":true},{"f":"Risk Management Standard","p":"APPLIES_TO","t":"Internal Environment","weight":1,"side":"BRIDGE","backbone":true},{"f":"Third-Party Software Security Policy","p":"APPLIES_TO","t":"Internal Environment","weight":1,"side":"BRIDGE","backbone":true},{"f":"Vulnerability Management Policy","p":"APPLIES_TO","t":"Internal Environment","weight":1,"side":"BRIDGE","backbone":true},{"f":"Authentication","p":"GOVERNS","t":"Authentication Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Data Classification","p":"GOVERNS","t":"Data Classification Standard","weight":1,"side":"BRIDGE","backbone":true},{"f":"Encryption Key Management","p":"GOVERNS","t":"Encryption Key Management Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Incident Response","p":"GOVERNS","t":"Incident Response Plan","weight":1,"side":"BRIDGE","backbone":true},{"f":"Physical Security","p":"GOVERNS","t":"Physical Security Policy","weight":1,"side":"BRIDGE","backbone":true},{"f":"Risk Management","p":"GOVERNS","t":"Risk Management Standard","weight":1,"side":"BRIDGE","backbone":true},{"f":"Employee","p":"ALLOWED_ACCESS_TO","t":"Information","weight":1,"side":"B","backbone":false},{"f":"Organization","p":"ESTABLISHES","t":"Roles and Responsibilities","weight":1,"side":"B","backbone":false},{"f":"Customer Data","p":"STRICTLY_PROHIBITED_ON","t":"Mobile Device","weight":1,"side":"A","backbone":false},{"f":"Customer Data","p":"STORED_IN","t":"Production Environment","weight":1,"side":"A","backbone":false},{"f":"Customer Data","p":"ANALYZED_IN","t":"Production Environment","weight":1,"side":"A","backbone":false},{"f":"User","p":"WISHING_TO_USE","t":"Mobile Device","weight":1,"side":"A","backbone":false},{"f":"Mobile Device Policy","p":"GOVERNS","t":"Mobile Device","weight":2,"side":"A","backbone":false},{"f":"Customer Data","p":"PROHIBITED_ON","t":"Mobile Device","weight":1,"side":"A","backbone":false},{"f":"Production Environment","p":"SCOPED_AS","t":"Environment","weight":2,"side":"BRIDGE","backbone":false},{"f":"Customer Data","p":"PROHIBITED_ON","t":"Mobile Devices","weight":1,"side":"A","backbone":false},{"f":"Authentication","p":"IS_RESPONSIBILITY_OF","t":"Customer","weight":1,"side":"B","backbone":false},{"f":"Control","p":"INCLUDES","t":"MFA","weight":1,"side":"B","backbone":false},{"f":"Customer","p":"RESPONSIBLE_FOR","t":"Customer IdP","weight":1,"side":"B","backbone":false},{"f":"Physical Security Policy","p":"SETS_STANDARDS_TO_MITIGATE","t":"Unauthorized Access","weight":1,"side":"B","backbone":false},{"f":"Physical Security Policy","p":"RESTRICTS","t":"Access","weight":1,"side":"B","backbone":false},{"f":"Physical Security Policy","p":"MITIGATES_RISK_OF","t":"Unauthorized Access","weight":1,"side":"B","backbone":false},{"f":"Access","p":"RESTRICTED_TO","t":"Employee","weight":1,"side":"B","backbone":false},{"f":"Staff Awareness Training","p":"COVERS","t":"Privacy","weight":1,"side":"A","backbone":false},{"f":"Staff Awareness Training","p":"COVERS","t":"Acceptable Use","weight":1,"side":"A","backbone":false},{"f":"Personnel","p":"RECEIVES","t":"Staff Awareness Training","weight":1,"side":"A","backbone":false},{"f":"Corporate Policies","p":"GOVERNS","t":"Encryption","weight":1,"side":"B","backbone":false},{"f":"Corporate Policies","p":"GOVERNS","t":"Physical Security","weight":1,"side":"B","backbone":false},{"f":"Corporate Policies","p":"GOVERNS","t":"Risk Management","weight":1,"side":"B","backbone":false},{"f":"Security Awareness Training","p":"IS_PART_OF","t":"Onboarding Process","weight":1,"side":"B","backbone":false},{"f":"Employee","p":"COMPLETES","t":"Security Awareness Training","weight":1,"side":"B","backbone":false},{"f":"Employee","p":"RECEIVES","t":"Privacy Training","weight":1,"side":"A","backbone":false},{"f":"New Hires","p":"RECEIVES","t":"Privacy Training","weight":1,"side":"A","backbone":false},{"f":"Employee","p":"READ_AND_SIGN","t":"Employee Handbook","weight":1,"side":"B","backbone":false},{"f":"Employee","p":"ACKNOWLEDGES","t":"Privacy Policy","weight":1,"side":"B","backbone":false},{"f":"New Hire","p":"SIGNS","t":"Code of Conduct Policy","weight":1,"side":"B","backbone":false}]};
+  const MODE = "connection";
+  const POL_A = DATA.doc_a || DATA.label || "";
+  const POL_B = DATA.doc_b || "";
+  const SOLO_LABEL = DATA.label || POL_A;
+  function prettyPred(p) { if (!p) return ""; return String(p).toLowerCase().replace(/_/g, " "); }
+  const svg = d3.select("#graph");
+  const stage = document.getElementById("stage");
+  const tip = document.getElementById("tip");
+  const panel = document.getElementById("panel");
+  const mainEl = document.querySelector("main");
+  const search = document.getElementById("search");
+  const resetBtn = document.getElementById("reset");
+  const toggleBtn = document.getElementById("toggle-preds");
+  let W = stage.clientWidth, H = stage.clientHeight;
+  svg.attr("viewBox", [0, 0, W, H]);
+  const zoomG = svg.append("g");
+  const gEdges = zoomG.append("g").attr("class", "edges");
+  const gLabels = zoomG.append("g").attr("class", "edge-labels");
+  const gNodes = zoomG.append("g").attr("class", "nodes");
+  const sizeOf = (d) => (d.topics_a || 0) + (d.topics_b || 0) + (MODE === "solo" ? (d.topics_total || 0) : 0);
+  const maxTopics = d3.max(DATA.nodes, sizeOf) || 1;
+  const r = d3.scaleSqrt().domain([1, maxTopics]).range([4, MODE === "solo" ? 34 : 26]);
+  const ew = d3.scaleSqrt().domain([1, d3.max(DATA.edges, d => d.weight) || 1]).range([0.7, 3.4]);
+  const nodeById = new Map(DATA.nodes.map(n => [n.id, n]));
+  const inEdges = new Map(DATA.nodes.map(n => [n.id, []]));
+  const outEdges = new Map(DATA.nodes.map(n => [n.id, []]));
+  DATA.edges.forEach(e => { if (!nodeById.has(e.f) || !nodeById.has(e.t)) return; outEdges.get(e.f).push(e); inEdges.get(e.t).push(e); });
+  DATA.nodes.forEach(n => { if (MODE === "solo") n.uiSide = "solo"; else if (n.side === "A" || n.side === "PRIVACY") n.uiSide = "a"; else if (n.side === "B" || n.side === "IR") n.uiSide = "b"; else n.uiSide = "bridge"; });
+  DATA.edges.forEach(e => { if (MODE === "solo") e.uiSide = "solo"; else if (e.side === "A" || e.side === "PRIVACY") e.uiSide = "a"; else if (e.side === "B" || e.side === "IR") e.uiSide = "b"; else e.uiSide = "bridge"; });
+  const leanOf = (d) => { const a = d.topics_a || 0, b = d.topics_b || 0; if (a + b === 0) return 0; return (b - a) / (a + b); };
+  const sideX = (d) => { if (MODE === "solo") return W * 0.5; if (d.uiSide === "a") return W * 0.18; if (d.uiSide === "b") return W * 0.82; return W * (0.5 + 0.18 * leanOf(d)); };
+  const links = DATA.edges.map(e => ({ source: e.f, target: e.t, w: e.weight, edge: e }));
+  const isConn = (MODE === "connection");
+  const sim = d3.forceSimulation(DATA.nodes).force("link", d3.forceLink(links).id(d => d.id).distance(d => (isConn ? 95 : 72) + 55 / Math.sqrt(d.w)).strength(d => Math.min(1, 0.04 + 0.05 * d.w))).force("charge", d3.forceManyBody().strength(isConn ? -380 : -220)).force("collide", d3.forceCollide().radius(d => r(sizeOf(d)) + (isConn ? 18 : 11))).force("x", d3.forceX(d => sideX(d)).strength(d => MODE === "solo" ? 0.06 : (d.uiSide === "bridge" ? 0.10 : 0.32))).force("y", d3.forceY(H / 2).strength(0.05));
+  const edgeSel = gEdges.selectAll("path").data(links).join("path").attr("class", d => "edge " + d.edge.uiSide + (d.edge.backbone ? " backbone" : "")).attr("stroke-width", d => ew(d.w) * (d.edge.backbone ? 1.8 : 1)).attr("marker-end", d => `url(#arrow-${d.edge.uiSide})`).on("mouseenter", (ev, d) => showTip(ev, d)).on("mousemove", (ev) => moveTip(ev)).on("mouseleave", hideTip);
+  const labelSel = gLabels.selectAll("text").data(links).join("text").attr("class", "edge-label").text(d => prettyPred(d.edge.p));
+  const nodeSel = gNodes.selectAll("g.node").data(DATA.nodes, d => d.id).join("g").attr("class", d => "node " + d.uiSide).call(d3.drag().on("start", (ev, d) => { if (!ev.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }).on("drag", (ev, d) => { d.fx = ev.x; d.fy = ev.y; }).on("end", (ev, d) => { if (!ev.active) sim.alphaTarget(0); })).on("click", (ev, d) => { ev.stopPropagation(); focusNode(d); });
+  nodeSel.append("circle").attr("r", d => r(sizeOf(d)));
+  const sortedSize = DATA.nodes.slice().sort((a, b) => sizeOf(b) - sizeOf(a));
+  const LABEL_TOP_N = MODE === "solo" ? 30 : 14;
+  const labelAlways = new Set(sortedSize.slice(0, LABEL_TOP_N).map(n => n.id));
+  if (MODE === "connection") { const bridges = DATA.nodes.filter(n => n.is_bridge || n.side === "BRIDGE"); bridges.sort((a, b) => sizeOf(b) - sizeOf(a)); bridges.slice(0, 16).forEach(n => labelAlways.add(n.id)); }
+  nodeSel.append("text").attr("dy", d => -(r(sizeOf(d)) + 7)).text(d => d.id).classed("show", d => labelAlways.has(d.id));
+  sim.on("tick", () => {
+    edgeSel.attr("d", d => { const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y; const dr = Math.hypot(dx, dy) * 1.7; const tr = r(sizeOf(d.target)) + 4; const ang = Math.atan2(dy, dx); const tx = d.target.x - Math.cos(ang) * tr; const ty = d.target.y - Math.sin(ang) * tr; return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${tx},${ty}`; });
+    labelSel.attr("x", d => (d.source.x + d.target.x) / 2).attr("y", d => (d.source.y + d.target.y) / 2 - 4);
+    nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+  svg.call(d3.zoom().scaleExtent([0.4, 4]).on("zoom", ev => zoomG.attr("transform", ev.transform)));
+  svg.on("click", () => clearFocus());
+  let focused = null;
+  function focusNode(d) {
+    focused = d.id;
+    const ins = inEdges.get(d.id) || [];
+    const outs = outEdges.get(d.id) || [];
+    const nbr = new Set();
+    ins.forEach(e => nbr.add(e.f));
+    outs.forEach(e => nbr.add(e.t));
+    nbr.add(d.id);
+    nodeSel.classed("dim", n => !nbr.has(n.id)).classed("focus", n => n.id === d.id);
+    edgeSel.classed("dim", e => e.source.id !== d.id && e.target.id !== d.id).classed("focus", e => e.source.id === d.id || e.target.id === d.id);
+    labelSel.classed("show", e => e.source.id === d.id || e.target.id === d.id);
+    renderPanel(d);
+    resetBtn.classList.add("show");
+    if (!mainEl.classList.contains("has-focus")) { mainEl.classList.add("has-focus"); setTimeout(() => { W = stage.clientWidth; H = stage.clientHeight; svg.attr("viewBox", [0, 0, W, H]); sim.alpha(0.25).restart(); }, 320); }
+  }
+  function clearFocus() {
+    focused = null;
+    nodeSel.classed("dim", false).classed("focus", false);
+    edgeSel.classed("dim", false).classed("focus", false);
+    labelSel.classed("show", false).classed("alwaysShow", allOn || (MODE === "connection" ? null : false));
+    if (MODE === "connection") { labelSel.classed("alwaysShow", d => d.edge.backbone || allOn); }
+    document.querySelectorAll(".chip.on").forEach(c => c.classList.remove("on"));
+    renderEmpty();
+    resetBtn.classList.remove("show");
+    search.value = "";
+    if (mainEl.classList.contains("has-focus")) { mainEl.classList.remove("has-focus"); setTimeout(() => { W = stage.clientWidth; H = stage.clientHeight; svg.attr("viewBox", [0, 0, W, H]); sim.alpha(0.25).restart(); }, 320); }
+  }
+  resetBtn.addEventListener("click", clearFocus);
+  let allOn = false;
+  toggleBtn.addEventListener("click", () => { allOn = !allOn; toggleBtn.classList.toggle("on", allOn); toggleBtn.textContent = allOn ? "Hide predicates" : "Show predicates"; labelSel.classed("alwaysShow", allOn || backboneAlwaysOn); });
+  const backboneAlwaysOn = (MODE === "connection");
+  if (backboneAlwaysOn) { labelSel.classed("alwaysShow", d => d.edge.backbone); }
+  const predCounts = new Map();
+  DATA.edges.forEach(e => { const p = prettyPred(e.p); if (!p) return; predCounts.set(p, (predCounts.get(p) || 0) + 1); });
+  const topPreds = Array.from(predCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  const chipsEl = document.getElementById("chips");
+  const chipsWrap = document.getElementById("chips-wrap");
+  if (!topPreds.length) { chipsWrap.style.display = "none"; } else {
+    let activePred = null;
+    topPreds.forEach(([pred, n]) => {
+      const chip = document.createElement("button");
+      chip.className = "chip";
+      chip.innerHTML = `${escapeHtml(pred)}<span class="ct">${n}</span>`;
+      chip.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (activePred === pred) { activePred = null; document.querySelectorAll(".chip.on").forEach(c => c.classList.remove("on")); edgeSel.classed("dim", false); labelSel.classed("show", false).classed("alwaysShow", allOn || backboneAlwaysOn); nodeSel.classed("dim", false); }
+        else { activePred = pred; document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c === chip)); const liveNodes = new Set(); edgeSel.classed("dim", e => prettyPred(e.edge.p) !== pred); labelSel.classed("show", e => prettyPred(e.edge.p) === pred).classed("alwaysShow", false); DATA.edges.forEach(e => { if (prettyPred(e.p) === pred) { liveNodes.add(e.f); liveNodes.add(e.t); } }); nodeSel.classed("dim", n => !liveNodes.has(n.id)); }
+      });
+      chipsEl.appendChild(chip);
+    });
+  }
+  function renderEmpty() { panel.innerHTML = ""; }
+  function renderPanel(d) {
+    const isSolo = MODE === "solo";
+    let sideLabel, sideClass;
+    if (isSolo) { sideLabel = SOLO_LABEL; sideClass = "solo"; } else if (d.uiSide === "a") { sideLabel = POL_A; sideClass = "a"; } else if (d.uiSide === "b") { sideLabel = POL_B; sideClass = "b"; } else { sideLabel = "Bridge concept"; sideClass = "bridge"; }
+    const ins = (inEdges.get(d.id) || []).slice().sort((a, b) => b.weight - a.weight);
+    const outs = (outEdges.get(d.id) || []).slice().sort((a, b) => b.weight - a.weight);
+    const totalRel = ins.length + outs.length;
+    let outHtml = "";
+    if (outs.length) { outHtml = `<div class="section"><h3>Outgoing &middot; ${outs.length}</h3><div class="preds-box">` + outs.map(e => `<div class="predrow"><b>${escapeHtml(d.id)}</b> <span class="pred">${escapeHtml(prettyPred(e.p))}</span> <b>${escapeHtml(e.t)}</b></div>`).join("") + `</div></div>`; }
+    let inHtml = "";
+    if (ins.length) { inHtml = `<div class="section"><h3>Incoming &middot; ${ins.length}</h3><div class="preds-box">` + ins.map(e => `<div class="predrow"><b>${escapeHtml(e.f)}</b> <span class="pred">${escapeHtml(prettyPred(e.p))}</span> <b>${escapeHtml(d.id)}</b></div>`).join("") + `</div></div>`; }
+    panel.innerHTML = `<div class="ptitle">Focused concept</div><h2>${escapeHtml(d.id)}</h2><div><span class="sidechip ${sideClass}">${escapeHtml(sideLabel)}</span></div><div class="meta" style="margin-top:10px">${totalRel} relationship${totalRel === 1 ? "" : "s"}</div>${outHtml}${inHtml}`;
+  }
+  renderEmpty();
+  search.addEventListener("input", () => { const q = search.value.trim().toLowerCase(); if (!q) { if (!focused) clearFocus(); return; } const match = DATA.nodes.find(n => n.id.toLowerCase().includes(q)); if (match) focusNode(match); });
+  function showTip(ev, d) {
+    const e = d.edge;
+    let sideLbl;
+    if (MODE === "solo") sideLbl = SOLO_LABEL; else if (e.uiSide === "a") sideLbl = POL_A; else if (e.uiSide === "b") sideLbl = POL_B; else if (e.backbone) sideLbl = "In both policies"; else sideLbl = "Bridge";
+    tip.innerHTML = `<div class="tt-pair"><em>${escapeHtml(e.f)}</em> &nbsp;<span class="tt-pred">${escapeHtml(prettyPred(e.p))}</span>&nbsp; <em>${escapeHtml(e.t)}</em></div><div class="tt-meta">${sideLbl}</div>`;
+    tip.classList.add("show");
+    moveTip(ev);
+  }
+  function moveTip(ev) { const rb = stage.getBoundingClientRect(); const x = ev.clientX - rb.left + 14; const y = ev.clientY - rb.top + 14; const tw = tip.offsetWidth, th = tip.offsetHeight; const cx = Math.min(x, rb.width - tw - 8); const cy = Math.min(y, rb.height - th - 8); tip.style.transform = `translate(${cx}px,${cy}px)`; }
+  function hideTip() { tip.classList.remove("show"); }
+  function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c])); }
+  window.addEventListener("resize", () => { W = stage.clientWidth; H = stage.clientHeight; svg.attr("viewBox", [0, 0, W, H]); sim.force("x", d3.forceX(d => sideX(d)).strength(d => MODE === "solo" ? 0.06 : (d.uiSide === "bridge" ? 0.10 : 0.32))); sim.force("y", d3.forceY(H / 2).strength(0.05)); sim.alpha(0.3).restart(); });
+</script>
+</body>
+</html>
